@@ -1,15 +1,56 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Custom Cursor Component
+function CustomCursor() {
+  const cursorRef = useRef();
+  const followerRef = useRef();
+
+  useEffect(() => {
+    const onMouseMove = (e) => {
+      // Move dot instantly
+      gsap.to(cursorRef.current, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0,
+      });
+      // Move follower with slight delay
+      gsap.to(followerRef.current, {
+        x: e.clientX,
+        y: e.clientY,
+        duration: 0.6,
+        ease: "power3.out",
+      });
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    return () => window.removeEventListener('mousemove', onMouseMove);
+  }, []);
+
+  return (
+    <>
+      {/* Outer trailing circle */}
+      <div 
+        ref={followerRef} 
+        className="fixed top-0 left-0 w-10 h-10 border border-primary/50 rounded-full pointer-events-none z-[100] -translate-x-1/2 -translate-y-1/2 mix-blend-screen"
+      />
+      {/* Inner glowing dot */}
+      <div 
+        ref={cursorRef} 
+        className="fixed top-0 left-0 w-2 h-2 bg-primary rounded-full pointer-events-none z-[100] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_#ffb86c]"
+      />
+    </>
+  );
+}
 
 export default function Overlay() {
   const overlayRef = useRef();
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Fade and slide up text elements on scroll
       gsap.utils.toArray('.gsap-fade-up').forEach(element => {
         gsap.fromTo(element, 
           { opacity: 0, y: 80 },
@@ -27,7 +68,6 @@ export default function Overlay() {
         );
       });
 
-      // Parallax text effect
       gsap.utils.toArray('.gsap-parallax').forEach(element => {
         gsap.to(element, {
           y: -100,
@@ -48,10 +88,11 @@ export default function Overlay() {
   return (
     <div ref={overlayRef} className="relative z-10 w-full pointer-events-none">
       
+      <CustomCursor />
+
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full p-6 md:px-12 flex justify-between items-center mix-blend-difference pointer-events-auto z-50">
         <div className="flex items-center gap-3">
-          {/* Logo is intentionally left blank here because the 3D logo will slide into this spot! */}
           <div className="w-32 h-8"></div>
         </div>
         <div className="flex gap-6 items-center">
@@ -64,15 +105,16 @@ export default function Overlay() {
       </nav>
 
       {/* Screen 1: Pure 3D Logo Stage */}
-      {/* This section has NO large text, allowing the user to experience the massive interactive 3D logo first */}
-      <section className="h-screen flex flex-col justify-end items-center pb-12 pointer-events-auto">
-        <div className="text-white/30 text-xs uppercase tracking-[0.3em] animate-pulse">
+      {/* Removed pointer-events-auto from the massive section wrapper so the 3D canvas underneath can receive mouse movements! */}
+      <section className="h-screen flex flex-col justify-end items-center pb-12">
+        <div className="text-white/30 text-xs uppercase tracking-[0.3em] animate-pulse pointer-events-none">
           Scroll to discover
         </div>
       </section>
 
       {/* Screen 2: Hero Content */}
       <section className="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20">
+        {/* Only the content block gets pointer-events-auto */}
         <div className="pointer-events-auto gsap-fade-up">
           <div className="mb-4 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
             01 — Who We Are
@@ -88,14 +130,13 @@ export default function Overlay() {
             They'll be built on intelligence.
           </p>
           
-          <div className="mt-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+          <div className="mt-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors cursor-pointer">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#ffb86c]"></span>
             <span className="text-xs uppercase tracking-wider text-white/80">Available for new projects</span>
           </div>
         </div>
       </section>
 
-      {/* spacer to allow scrolling while 3D moves */}
       <div className="h-[20vh]"></div>
 
       {/* Services Intro Section */}
@@ -105,18 +146,18 @@ export default function Overlay() {
             <div className="mb-6 text-accent tracking-[0.3em] text-xs uppercase font-semibold">
               02 — What We Do
             </div>
-            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight leading-tight text-white">
+            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight leading-tight text-white hover:text-primary transition-colors duration-500">
               Intelligence <br/>at Scale.
             </h2>
             <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
               Turn your "what if" into a functional AI reality in 14 days. We leverage cutting-edge WebGL, React Three Fiber, and high-performance engineering to build award-winning experiences.
             </p>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
-              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
                 <h3 className="text-2xl font-semibold mb-3 text-white">AI-Powered MVP</h3>
                 <p className="text-white/50 text-sm leading-relaxed">Stop waiting months. We use Vibe Coding to ship full-stack AI-integrated MVPs in 14 days.</p>
               </div>
-              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
                 <h3 className="text-2xl font-semibold mb-3 text-white">Workflow Agents</h3>
                 <p className="text-white/50 text-sm leading-relaxed">Digital employees that handle leads, manage CRM, and automate repetitive tasks automatically.</p>
               </div>
@@ -125,7 +166,6 @@ export default function Overlay() {
         </div>
       </section>
 
-      {/* spacer */}
       <div className="h-[20vh]"></div>
 
       {/* Immersive 3D Text Parallax Section */}
@@ -135,7 +175,7 @@ export default function Overlay() {
             <div className="mb-6 text-primary tracking-[0.3em] text-xs uppercase font-semibold">
               03 — The Philosophy
             </div>
-            <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white hover:text-accent transition-colors duration-500">
               Immersive <br/>Experiences.
             </h2>
             <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
@@ -144,7 +184,7 @@ export default function Overlay() {
           </div>
           
           <div className="gsap-parallax mt-12">
-            <button className="px-10 py-5 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,184,108,0.3)]">
+            <button className="px-10 py-5 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,184,108,0.3)] hover:shadow-[0_0_60px_rgba(255,184,108,0.6)] cursor-pointer">
               View Our Work
             </button>
           </div>
@@ -159,7 +199,7 @@ export default function Overlay() {
           <p className="text-xl md:text-2xl text-white/50 mb-12 font-light">
             Fourteen days. One outcome. Zero excuses.<br/>Let's turn your idea into something real.
           </p>
-          <a href="mailto:hello@difyuno.com" className="inline-block px-12 py-6 bg-gradient-to-r from-primary to-accent text-black font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 hover:shadow-[0_0_60px_rgba(255,184,108,0.5)] transition-all">
+          <a href="mailto:hello@difyuno.com" className="inline-block px-12 py-6 bg-gradient-to-r from-primary to-accent text-black font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 hover:shadow-[0_0_60px_rgba(255,184,108,0.5)] transition-all cursor-pointer">
             Start Your 14-Day Build
           </a>
         </div>

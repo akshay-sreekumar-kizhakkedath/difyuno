@@ -1,4 +1,4 @@
-import { useRef, useMemo } from 'react';
+import { useRef, useMemo, useState } from 'react';
 import { useFrame, extend, useThree } from '@react-three/fiber';
 import { useTexture, Environment, shaderMaterial } from '@react-three/drei';
 import * as THREE from 'three';
@@ -25,8 +25,9 @@ const LiquidLogoMaterial = shaderMaterial(
       
       float dist = distance(uv, uMouse);
       
-      float wave = sin(dist * 40.0 - uTime * 8.0);
-      float ripple = wave * 0.15 * uHover * smoothstep(0.5, 0.0, dist);
+      // Much stronger and continuous wave
+      float wave = sin(dist * 50.0 - uTime * 10.0);
+      float ripple = wave * 0.25 * smoothstep(0.8, 0.0, dist);
       pos.z += ripple;
 
       gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -44,8 +45,8 @@ const LiquidLogoMaterial = shaderMaterial(
       
       float dist = distance(uv, uMouse);
       
-      float wave = sin(dist * 40.0 - uTime * 8.0);
-      float ripple = wave * 0.03 * uHover * smoothstep(0.5, 0.0, dist);
+      float wave = sin(dist * 50.0 - uTime * 10.0);
+      float ripple = wave * 0.05 * smoothstep(0.8, 0.0, dist);
       
       uv += vec2(ripple);
 
@@ -56,7 +57,7 @@ const LiquidLogoMaterial = shaderMaterial(
         discard;
       }
       
-      float highlight = smoothstep(0.9, 1.0, wave) * 0.2 * uHover * smoothstep(0.5, 0.0, dist);
+      float highlight = smoothstep(0.9, 1.0, wave) * 0.3 * smoothstep(0.8, 0.0, dist);
       color.rgb += vec3(highlight);
 
       gl_FragColor = vec4(color.rgb, 1.0);
@@ -82,10 +83,10 @@ const InteractiveGrainMaterial = shaderMaterial(
       
       float dist = distance(pos, uMouse);
       
-      float influenceRadius = 5.0; 
+      float influenceRadius = 8.0; // Increased radius
       if(dist < influenceRadius) {
          vec3 dir = normalize(pos - uMouse);
-         float pushStrength = (influenceRadius - dist) * 0.8; 
+         float pushStrength = (influenceRadius - dist) * 1.2; // Increased strength
          
          pos.x += dir.x * pushStrength;
          pos.y += dir.y * pushStrength;
@@ -96,11 +97,11 @@ const InteractiveGrainMaterial = shaderMaterial(
       pos.y += cos(uTime * 0.2 + pos.x) * 0.05;
 
       vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-      gl_PointSize = 3.0 * (1.0 / -mvPosition.z);
+      gl_PointSize = 3.5 * (1.0 / -mvPosition.z);
       gl_Position = projectionMatrix * mvPosition;
       
       float centerDist = length(pos.xy);
-      vAlpha = smoothstep(35.0, 0.0, centerDist) * 0.5;
+      vAlpha = smoothstep(35.0, 0.0, centerDist) * 0.6;
     }
   `,
   `
@@ -119,28 +120,21 @@ extend({ LiquidLogoMaterial, InteractiveGrainMaterial });
 // COMPONENTS
 // --------------------------------------------------------
 
-function LiquidLogo() {
+function LiquidLogo({ globalMouseUv }) {
   const materialRef = useRef();
-  const targetHover = useRef(0);
   const texture = useTexture('/assets/logo.png');
 
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uTime = state.clock.getElapsedTime();
       
-      const targetX = state.pointer.x * 0.5 + 0.5;
-      const targetY = state.pointer.y * 0.5 + 0.5;
-      
-      materialRef.current.uMouse.lerp(new THREE.Vector2(targetX, targetY), 0.1);
-      materialRef.current.uHover = THREE.MathUtils.lerp(materialRef.current.uHover, targetHover.current, 0.1);
+      // Update logo shader with global mouse UV passed from parent
+      materialRef.current.uMouse.lerp(globalMouseUv.current, 0.1);
     }
   });
 
   return (
-    <mesh 
-      onPointerOver={() => (targetHover.current = 1)}
-      onPointerOut={() => (targetHover.current = 0)}
-    >
+    <mesh>
       <planeGeometry args={[8, 8, 128, 128]} />
       <liquidLogoMaterial 
         ref={materialRef} 
@@ -152,11 +146,9 @@ function LiquidLogo() {
   );
 }
 
-function InteractiveGrains() {
+function InteractiveGrains({ globalMousePos }) {
   const pointsRef = useRef();
   const materialRef = useRef();
-  const { camera } = useThree();
-  const vec = new THREE.Vector3();
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
@@ -176,14 +168,7 @@ function InteractiveGrains() {
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uTime = state.clock.getElapsedTime();
-      
-      vec.set(state.pointer.x, state.pointer.y, 0.5);
-      vec.unproject(camera);
-      vec.sub(camera.position).normalize();
-      const distance = (-10 - camera.position.z) / vec.z;
-      const pos = camera.position.clone().add(vec.multiplyScalar(distance));
-      
-      materialRef.current.uMouse.copy(pos);
+      materialRef.current.uMouse.copy(globalMousePos.current);
     }
   });
 
@@ -201,47 +186,53 @@ function InteractiveGrains() {
 
 export default function Scene() {
   const group = useRef();
-  const { viewport } = useThree();
+  const { viewport, camera } = useThree();
+  
+  // Track mouse globally without relying on raycasting intersection
+  const globalMouseUv = useRef(new THREE.Vector2(0.5, 0.5));
+  const globalMousePos = useRef(new THREE.Vector3(0, 0, 0));
+  const vec = new THREE.Vector3();
 
-  useFrame(() => {
+  useFrame((state) => {
+    // 1. Calculate global mouse position continuously
+    const targetX = state.pointer.x * 0.5 + 0.5;
+    const targetY = state.pointer.y * 0.5 + 0.5;
+    globalMouseUv.current.set(targetX, targetY);
+
+    vec.set(state.pointer.x, state.pointer.y, 0.5);
+    vec.unproject(camera);
+    vec.sub(camera.position).normalize();
+    const distance = (-10 - camera.position.z) / vec.z;
+    globalMousePos.current.copy(camera.position.clone().add(vec.multiplyScalar(distance)));
+
+    // 2. Scroll logic
     const scrollY = window.scrollY;
     const vh = window.innerHeight || 1000;
     
     if (group.current) {
-      // scrollProgress: 0 = top of page, 1 = scrolled one full screen down
       const scrollProgress = THREE.MathUtils.clamp(scrollY / vh, 0, 1);
       
-      // We want to interpolate between:
-      // START (center of screen, huge)
-      // END (top-left corner of screen, small)
-
-      // 1. Calculate Target Scale (shrinks as we scroll)
       const startScale = 1.8;
       const endScale = 0.25; 
       const currentScale = THREE.MathUtils.lerp(startScale, endScale, scrollProgress);
       group.current.scale.set(currentScale, currentScale, currentScale);
 
-      // 2. Calculate Target Position
-      // Start pos: center (0, 0)
-      // End pos: top left. We use viewport width/height to find the exact corner.
-      // (viewport.width/2 is the right edge, so -viewport.width/2 is the left edge)
-      // We add some padding so it acts like a navbar logo.
+      const paddingX = viewport.width * 0.05; 
+      const paddingY = viewport.height * 0.05; 
       
-      // Calculate top-left coordinate in 3D space
-      const paddingX = viewport.width * 0.05; // 5vw padding left
-      const paddingY = viewport.height * 0.05; // 5vh padding top
-      
-      const endX = -(viewport.width / 2) + paddingX + (2.0); // 2.0 offsets the logo's internal width
+      const endX = -(viewport.width / 2) + paddingX + (2.0); 
       const endY = (viewport.height / 2) - paddingY - (1.0);
 
-      // Interpolate from 0 to target position
       const currentX = THREE.MathUtils.lerp(0, endX, scrollProgress);
       const currentY = THREE.MathUtils.lerp(0, endY, scrollProgress);
 
       group.current.position.set(currentX, currentY, 0);
 
-      // 3. Keep the logo completely flat and still, so it perfectly matches a 2D DOM element at the end
-      group.current.rotation.set(0, 0, 0);
+      // 3. Parallax effect - Slight tilt based on mouse position
+      // We fade this out as they scroll down so it locks cleanly into the navbar
+      const parallaxFactor = 1.0 - scrollProgress;
+      group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, (state.pointer.x * 0.25) * parallaxFactor, 0.1);
+      group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, (state.pointer.y * -0.25) * parallaxFactor, 0.1);
     }
   });
 
@@ -252,11 +243,11 @@ export default function Scene() {
       <Environment preset="city" />
 
       {/* Interactive Background Grains */}
-      <InteractiveGrains />
+      <InteractiveGrains globalMousePos={globalMousePos} />
 
       {/* Main Logo Container */}
       <group ref={group}>
-        <LiquidLogo />
+        <LiquidLogo globalMouseUv={globalMouseUv} />
       </group>
     </>
   );
