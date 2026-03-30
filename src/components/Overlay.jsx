@@ -1,0 +1,164 @@
+import { useEffect, useRef } from 'react';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+gsap.registerPlugin(ScrollTrigger);
+
+export default function Overlay() {
+  const overlayRef = useRef();
+
+  useEffect(() => {
+    const ctx = gsap.context(() => {
+      // Fade and slide up text elements on scroll
+      gsap.utils.toArray('.gsap-fade-up').forEach(element => {
+        gsap.fromTo(element, 
+          { opacity: 0, y: 80 },
+          {
+            opacity: 1,
+            y: 0,
+            duration: 1.2,
+            ease: "power3.out",
+            scrollTrigger: {
+              trigger: element,
+              start: "top 85%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      });
+
+      // Parallax text effect
+      gsap.utils.toArray('.gsap-parallax').forEach(element => {
+        gsap.to(element, {
+          y: -100,
+          ease: "none",
+          scrollTrigger: {
+            trigger: element,
+            start: "top bottom",
+            end: "bottom top",
+            scrub: true
+          }
+        });
+      });
+    }, overlayRef);
+
+    return () => ctx.revert();
+  }, []);
+
+  return (
+    <div ref={overlayRef} className="relative z-10 w-full pointer-events-none">
+      
+      {/* Navigation */}
+      <nav className="fixed top-0 left-0 w-full p-6 md:px-12 flex justify-between items-center mix-blend-difference pointer-events-auto z-50">
+        <div className="flex items-center gap-3">
+          <img src="/assets/logo.png" alt="Difyuno" className="h-8 invert" />
+        </div>
+        <div className="flex gap-6 items-center">
+          <a href="#services" className="hidden md:block text-sm uppercase tracking-widest hover:text-primary transition-colors">Services</a>
+          <a href="#work" className="hidden md:block text-sm uppercase tracking-widest hover:text-primary transition-colors">Work</a>
+          <a href="#contact" className="px-6 py-2.5 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all text-sm tracking-widest uppercase backdrop-blur-md bg-white/5">
+            Start Building
+          </a>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <section className="h-screen flex flex-col justify-center items-center text-center px-4">
+        <div className="pointer-events-auto gsap-fade-up">
+          <div className="mb-6 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
+            01 — Who We Are
+          </div>
+          <h1 className="text-[12vw] md:text-[8vw] font-bold leading-[0.9] tracking-tighter uppercase mb-6 drop-shadow-2xl">
+            We Build <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-[#a78bfa]">
+              Outcomes
+            </span>
+          </h1>
+          <p className="text-lg md:text-2xl text-white/60 max-w-2xl mx-auto font-light leading-relaxed">
+            The next generation of business won't be built on templates. <br className="hidden md:block" />
+            They'll be built on intelligence.
+          </p>
+          
+          <div className="mt-12 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+            <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span>
+            <span className="text-xs uppercase tracking-wider text-white/70">Available for new projects</span>
+          </div>
+        </div>
+      </section>
+
+      {/* spacer to allow scrolling while 3D moves */}
+      <div className="h-[30vh]"></div>
+
+      {/* Services Intro Section */}
+      <section id="services" className="min-h-screen flex items-center px-8 md:px-24">
+        <div className="max-w-3xl pointer-events-auto">
+          <div className="gsap-fade-up">
+            <div className="mb-6 text-[#a78bfa] tracking-[0.3em] text-xs uppercase font-semibold">
+              02 — What We Do
+            </div>
+            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight leading-tight">
+              Intelligence <br/>at Scale.
+            </h2>
+            <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
+              Turn your "what if" into a functional AI reality in 14 days. We leverage cutting-edge WebGL, React Three Fiber, and high-performance engineering to build award-winning experiences.
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
+              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                <h3 className="text-2xl font-semibold mb-3">AI-Powered MVP</h3>
+                <p className="text-white/50 text-sm leading-relaxed">Stop waiting months. We use Vibe Coding to ship full-stack AI-integrated MVPs in 14 days.</p>
+              </div>
+              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md">
+                <h3 className="text-2xl font-semibold mb-3">Workflow Agents</h3>
+                <p className="text-white/50 text-sm leading-relaxed">Digital employees that handle leads, manage CRM, and automate repetitive tasks automatically.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* spacer */}
+      <div className="h-[20vh]"></div>
+
+      {/* Immersive 3D Text Parallax Section */}
+      <section className="min-h-screen flex items-center justify-end px-8 md:px-24 text-right">
+        <div className="max-w-2xl pointer-events-auto">
+          <div className="gsap-fade-up">
+            <div className="mb-6 text-primary tracking-[0.3em] text-xs uppercase font-semibold">
+              03 — The Philosophy
+            </div>
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight">
+              Immersive <br/>Experiences.
+            </h2>
+            <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
+              Break out of the 2D grid. Interactive storytelling creates memory and drives conversion. Minimum clicks. Maximum impact.
+            </p>
+          </div>
+          
+          <div className="gsap-parallax mt-12">
+            <button className="px-10 py-5 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 transition-transform shadow-[0_0_40px_rgba(108,108,255,0.4)]">
+              View Our Work
+            </button>
+          </div>
+        </div>
+      </section>
+
+      {/* Final CTA / Footer */}
+      <section id="contact" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-t from-primary/10 to-transparent pointer-events-none z-0"></div>
+        <div className="relative z-10 max-w-4xl pointer-events-auto gsap-fade-up">
+          <h2 className="text-6xl md:text-9xl font-bold mb-8 tracking-tighter">Ready?</h2>
+          <p className="text-xl md:text-2xl text-white/50 mb-12 font-light">
+            Fourteen days. One outcome. Zero excuses.<br/>Let's turn your idea into something real.
+          </p>
+          <a href="mailto:hello@difyuno.com" className="inline-block px-12 py-6 bg-gradient-to-r from-primary to-[#a78bfa] text-white font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 hover:shadow-[0_0_60px_rgba(167,139,250,0.6)] transition-all">
+            Start Your 14-Day Build
+          </a>
+        </div>
+      </section>
+
+      <footer className="py-8 text-center text-white/30 text-xs tracking-widest uppercase border-t border-white/5 bg-black/50 backdrop-blur-lg pointer-events-auto">
+        <p>© 2026 Difyuno. Engineered for the future.</p>
+      </footer>
+    </div>
+  );
+}
