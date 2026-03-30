@@ -1,99 +1,92 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { Environment, Float, MeshDistortMaterial, ContactShadows, Stars } from '@react-three/drei';
+import { Environment, Float, MeshDistortMaterial, ContactShadows, Stars, Sparkles } from '@react-three/drei';
+import * as THREE from 'three';
 
 export default function Scene() {
   const group = useRef();
+  const ring1 = useRef();
+  const ring2 = useRef();
+  const ring3 = useRef();
 
-  useFrame(() => {
+  useFrame((state) => {
     // Scroll-based rotation and translation
     const scrollY = window.scrollY;
     
-    // Smooth dampening could be added here, but direct mapping gives a nice locked-in feel for now
+    // Rotate the whole group based on scroll
     group.current.rotation.y = scrollY * 0.001;
-    group.current.rotation.x = scrollY * 0.0005;
     group.current.position.y = Math.sin(scrollY * 0.002) * 1;
     
     // Camera effect: Move the whole group towards the camera as you scroll down
     group.current.position.z = scrollY * 0.002;
+
+    // Animate rings
+    const t = state.clock.getElapsedTime();
+    if(ring1.current) ring1.current.rotation.z = t * 0.5;
+    if(ring2.current) ring2.current.rotation.z = -t * 0.3;
+    if(ring3.current) ring3.current.rotation.z = t * 0.2;
   });
 
   return (
     <>
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[10, 10, 5]} intensity={1.5} color="#6c6cff" />
-      <directionalLight position={[-10, -10, -5]} intensity={1} color="#a78bfa" />
-      <Environment preset="city" />
+      <ambientLight intensity={0.2} />
+      {/* Golden/Warm lighting to match the logo vibe */}
+      <directionalLight position={[10, 10, 5]} intensity={2} color="#ffb86c" />
+      <directionalLight position={[-10, -10, -5]} intensity={0.5} color="#ffffff" />
+      <spotLight position={[0, 5, 0]} intensity={2} color="#ffb86c" penumbra={1} />
+      <Environment preset="night" />
 
       {/* Main 3D Container */}
       <group ref={group}>
         
-        {/* Core Element - Abstract Shape */}
-        <Float speed={2} rotationIntensity={0.5} floatIntensity={1}>
-          <mesh position={[0, 0, 0]}>
-            <icosahedronGeometry args={[1.5, 0]} />
-            <meshStandardMaterial 
-              color="#101015" 
-              metalness={0.9} 
-              roughness={0.1} 
-              wireframe={true} 
-            />
-          </mesh>
-        </Float>
-
-        {/* Liquid Distorted Blob */}
-        <Float speed={3} rotationIntensity={1} floatIntensity={2}>
-          <mesh position={[3.5, 1.5, -2]}>
-            <sphereGeometry args={[1.2, 64, 64]} />
+        {/* Core Element - Representing the Figure in the Logo (Abstract Metallic Fluid/Shape) */}
+        <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
+          <mesh position={[0, -1, 0]}>
+            <capsuleGeometry args={[0.5, 1, 32, 64]} />
             <MeshDistortMaterial 
-              color="#6c6cff" 
-              envMapIntensity={1} 
+              color="#2a2220" 
+              envMapIntensity={2} 
               clearcoat={1} 
-              clearcoatRoughness={0.1} 
-              metalness={0.8} 
+              clearcoatRoughness={0.2} 
+              metalness={0.9} 
               roughness={0.2} 
-              distort={0.5} 
-              speed={2} 
+              distort={0.3} 
+              speed={1.5} 
             />
           </mesh>
         </Float>
 
-        {/* Elegant Ring */}
-        <Float speed={1.5} rotationIntensity={2} floatIntensity={1.5}>
-          <mesh position={[-3.5, -2, -1]} rotation={[Math.PI / 4, 0, 0]}>
-            <torusGeometry args={[1.2, 0.2, 16, 64]} />
-            <meshStandardMaterial color="#a78bfa" metalness={0.8} roughness={0.1} />
-          </mesh>
-        </Float>
+        {/* Concentric Glowing Rings inspired by the Logo */}
+        <group position={[0, 1.5, 0]} rotation={[Math.PI / 2.5, 0, 0]}>
+          <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.2}>
+            {/* Inner Ring */}
+            <mesh ref={ring1}>
+              <torusGeometry args={[1.5, 0.03, 16, 100]} />
+              <meshStandardMaterial color="#ffe8b3" emissive="#ffb86c" emissiveIntensity={2} metalness={1} roughness={0.1} />
+            </mesh>
+            {/* Middle Ring */}
+            <mesh ref={ring2}>
+              <torusGeometry args={[2.2, 0.02, 16, 100]} />
+              <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} metalness={1} roughness={0.2} />
+            </mesh>
+            {/* Outer Ring */}
+            <mesh ref={ring3}>
+              <torusGeometry args={[3, 0.04, 16, 100]} />
+              <meshStandardMaterial color="#ffb86c" emissive="#ffb86c" emissiveIntensity={0.5} metalness={0.8} roughness={0.3} />
+            </mesh>
+          </Float>
+        </group>
 
         {/* Floating Particles/Geometric dust */}
-        {Array.from({ length: 30 }).map((_, i) => (
-          <mesh
-            key={i}
-            position={[
-              (Math.random() - 0.5) * 25,
-              (Math.random() - 0.5) * 25,
-              (Math.random() - 0.5) * 15 - 5
-            ]}
-            rotation={[Math.random() * Math.PI, Math.random() * Math.PI, 0]}
-          >
-            <octahedronGeometry args={[0.15 + Math.random() * 0.2, 0]} />
-            <meshStandardMaterial 
-              color="#ffffff" 
-              metalness={1} 
-              roughness={0} 
-              opacity={Math.random() * 0.5 + 0.1} 
-              transparent 
-            />
-          </mesh>
-        ))}
+        <Sparkles count={150} scale={12} size={2} speed={0.4} opacity={0.5} color="#ffb86c" />
+        
       </group>
 
       {/* Subtle Star background */}
-      <Stars radius={50} depth={50} count={2000} factor={4} saturation={0} fade speed={1} />
+      <Stars radius={50} depth={50} count={1000} factor={2} saturation={0} fade speed={1} />
 
       {/* Bottom shadow reflection */}
-      <ContactShadows position={[0, -5, 0]} opacity={0.4} scale={30} blur={2} far={10} />
+      <ContactShadows position={[0, -4, 0]} opacity={0.6} scale={30} blur={2.5} far={10} color="#000000" />
     </>
   );
 }

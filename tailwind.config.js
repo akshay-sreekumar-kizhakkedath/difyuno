@@ -7,9 +7,10 @@ export default {
   theme: {
     extend: {
       colors: {
-        background: '#050505',
-        foreground: '#f0f0f0',
-        primary: '#6c6cff',
+        background: '#030303',
+        foreground: '#ffffff',
+        primary: '#ffb86c',
+        accent: '#e6c387'
       },
       fontFamily: {
         sans: ['Inter', 'sans-serif'],
