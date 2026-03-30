@@ -121,9 +121,10 @@ export default function Scene() {
   useFrame((state) => {
     const scrollY = window.scrollY;
     
-    // Add subtle continuous floating and scroll-based parallax
+    // Moved base Y position from 1.8 down to 0.5 so it sits in the center of the viewport
+    // but still has the subtle float and parallax
     if (group.current) {
-      group.current.position.y = 1.8 + Math.sin(state.clock.getElapsedTime()) * 0.1 + (scrollY * 0.001);
+      group.current.position.y = 0.5 + Math.sin(state.clock.getElapsedTime()) * 0.1 + (scrollY * 0.001);
       group.current.rotation.y = scrollY * 0.0005;
     }
   });
