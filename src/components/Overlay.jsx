@@ -63,13 +63,21 @@ export default function Overlay() {
         </div>
       </nav>
 
-      {/* Hero Section - Shifted text to the bottom to give the 3D logo room to breathe */}
-      <section className="h-screen flex flex-col justify-end items-center text-center px-4 pb-12 md:pb-24">
+      {/* Screen 1: Pure 3D Logo Stage */}
+      {/* This section has NO large text, allowing the user to experience the massive interactive 3D logo first */}
+      <section className="h-screen flex flex-col justify-end items-center pb-12 pointer-events-auto">
+        <div className="text-white/30 text-xs uppercase tracking-[0.3em] animate-pulse">
+          Scroll to discover
+        </div>
+      </section>
+
+      {/* Screen 2: Hero Content */}
+      <section className="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20">
         <div className="pointer-events-auto gsap-fade-up">
           <div className="mb-4 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
             01 — Who We Are
           </div>
-          <h1 className="text-[12vw] md:text-[7.5vw] font-bold leading-[0.9] tracking-tighter uppercase mb-6 drop-shadow-2xl text-white">
+          <h1 className="text-[12vw] md:text-[8vw] font-bold leading-[0.9] tracking-tighter uppercase mb-6 drop-shadow-2xl text-white">
             We Build <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
               Outcomes
@@ -88,7 +96,7 @@ export default function Overlay() {
       </section>
 
       {/* spacer to allow scrolling while 3D moves */}
-      <div className="h-[30vh]"></div>
+      <div className="h-[20vh]"></div>
 
       {/* Services Intro Section */}
       <section id="services" className="min-h-screen flex items-center px-8 md:px-24">

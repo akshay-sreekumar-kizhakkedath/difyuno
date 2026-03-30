@@ -120,12 +120,26 @@ export default function Scene() {
 
   useFrame((state) => {
     const scrollY = window.scrollY;
+    const vh = window.innerHeight || 1000;
     
-    // Moved base Y position from 1.8 down to 0.5 so it sits in the center of the viewport
-    // but still has the subtle float and parallax
     if (group.current) {
-      group.current.position.y = 0.5 + Math.sin(state.clock.getElapsedTime()) * 0.1 + (scrollY * 0.001);
-      group.current.rotation.y = scrollY * 0.0005;
+      // Calculate how many screens we have scrolled (1.0 = 100vh)
+      const scrollProgress = scrollY / vh;
+      
+      // Move the logo upwards out of the camera view exactly as if it were 
+      // a normal DOM element scrolling away. 
+      // ~7.5 units equals roughly 1 screen height at this camera distance.
+      const scrollOffset = scrollProgress * 8.0;
+
+      // Start dead center (0), apply float, and push upwards based on scroll
+      group.current.position.y = 0 + Math.sin(state.clock.getElapsedTime()) * 0.1 + scrollOffset;
+      
+      // Add a slight spin as it scrolls away
+      group.current.rotation.y = scrollProgress * 1.5;
+      
+      // Slightly scale it down as it scrolls away
+      const currentScale = Math.max(1.8 - scrollProgress * 0.8, 0.5);
+      group.current.scale.set(currentScale, currentScale, currentScale);
     }
   });
 
@@ -135,8 +149,8 @@ export default function Scene() {
       <directionalLight position={[10, 10, 5]} intensity={1} color="#ffb86c" />
       <Environment preset="city" />
 
-      {/* Main Logo Container */}
-      <group ref={group} scale={0.85}>
+      {/* Main Logo Container - Increased scale significantly to dominate the first screen */}
+      <group ref={group} scale={1.8}>
         <LiquidLogo />
       </group>
 
