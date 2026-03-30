@@ -1,92 +1,143 @@
-import { useRef } from 'react';
-import { useFrame } from '@react-three/fiber';
-import { Environment, Float, MeshDistortMaterial, ContactShadows, Stars, Sparkles } from '@react-three/drei';
+import { useRef, useMemo } from 'react';
+import { useFrame, extend } from '@react-three/fiber';
+import { useTexture, Environment, shaderMaterial, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 
-export default function Scene() {
-  const group = useRef();
-  const ring1 = useRef();
-  const ring2 = useRef();
-  const ring3 = useRef();
+// 1. Particle Shader Material
+// This shader maps the logo texture onto a grid of particles,
+// discards the black background, and adds scroll/mouse dispersion.
+const LogoParticleMaterial = shaderMaterial(
+  {
+    uTexture: new THREE.Texture(),
+    uTime: 0,
+    uScroll: 0,
+    uMouse: new THREE.Vector2(0, 0),
+  },
+  // Vertex Shader
+  `
+    uniform float uTime;
+    uniform float uScroll;
+    uniform vec2 uMouse;
+    varying vec2 vUv;
+    
+    // Simple noise function
+    float random(vec2 st) {
+        return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+    }
+
+    void main() {
+      vUv = uv;
+      vec3 pos = position;
+
+      // 1. Mouse Interaction (Repel particles)
+      // Map mouse from [-1, 1] to UV space [0, 1] roughly
+      vec2 mouseUv = uMouse * 0.5 + 0.5;
+      float dist = distance(vUv, mouseUv);
+      float repel = smoothstep(0.15, 0.0, dist);
+      
+      // Add random scatter based on distance
+      float randX = random(vUv) - 0.5;
+      float randY = random(vUv + 1.0) - 0.5;
+      
+      pos.x += randX * repel * 2.0;
+      pos.y += randY * repel * 2.0;
+      pos.z += repel * 1.5; // Push outwards
+
+      // 2. Scroll Interaction (Break apart on scroll)
+      float scrollFactor = min(uScroll * 0.001, 2.0); // Limit dispersion
+      pos.x += randX * scrollFactor * 5.0;
+      pos.y += randY * scrollFactor * 5.0;
+      pos.z += sin(vUv.x * 20.0 + uTime) * scrollFactor;
+
+      vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
+      
+      // Point size depends on screen resolution and depth
+      gl_PointSize = 4.0 * (1.0 / -mvPosition.z);
+      gl_Position = projectionMatrix * mvPosition;
+    }
+  `,
+  // Fragment Shader
+  `
+    uniform sampler2D uTexture;
+    varying vec2 vUv;
+
+    void main() {
+      vec4 color = texture2D(uTexture, vUv);
+      
+      // Discard pure black or highly transparent pixels
+      // Since the logo has a black background, this leaves only the text/figure
+      float brightness = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+      if (brightness < 0.05 || color.a < 0.1) {
+        discard;
+      }
+      
+      // Add slight glow
+      gl_FragColor = vec4(color.rgb * 1.5, color.a);
+    }
+  `
+);
+
+// Register it so we can use <logoParticleMaterial />
+extend({ LogoParticleMaterial });
+
+function ParticleLogo() {
+  const materialRef = useRef();
+  const pointsRef = useRef();
+  const texture = useTexture('/assets/logo.png');
+  
+  // Create a dense grid of points
+  const geometry = useMemo(() => {
+    // 250x250 grid gives 62,500 particles. Enough for high resolution without killing performance.
+    return new THREE.PlaneGeometry(8, 8, 250, 250); 
+  }, []);
 
   useFrame((state) => {
-    // Scroll-based rotation and translation
-    const scrollY = window.scrollY;
+    if (materialRef.current) {
+      materialRef.current.uTime = state.clock.getElapsedTime();
+      materialRef.current.uScroll = window.scrollY;
+      
+      // Smoothly track mouse
+      materialRef.current.uMouse.lerp(
+        new THREE.Vector2(
+          (state.pointer.x * state.viewport.width) / 8, // scale to match plane size roughly
+          (state.pointer.y * state.viewport.height) / 8
+        ),
+        0.1
+      );
+    }
     
-    // Rotate the whole group based on scroll
-    group.current.rotation.y = scrollY * 0.001;
-    group.current.position.y = Math.sin(scrollY * 0.002) * 1;
-    
-    // Camera effect: Move the whole group towards the camera as you scroll down
-    group.current.position.z = scrollY * 0.002;
-
-    // Animate rings
-    const t = state.clock.getElapsedTime();
-    if(ring1.current) ring1.current.rotation.z = t * 0.5;
-    if(ring2.current) ring2.current.rotation.z = -t * 0.3;
-    if(ring3.current) ring3.current.rotation.z = t * 0.2;
+    // Slight float effect on the whole logo
+    if (pointsRef.current) {
+      pointsRef.current.position.y = Math.sin(state.clock.getElapsedTime()) * 0.1;
+    }
   });
 
   return (
+    <points ref={pointsRef} geometry={geometry}>
+      <logoParticleMaterial 
+        ref={materialRef} 
+        uTexture={texture} 
+        transparent={true}
+        depthWrite={false}
+      />
+    </points>
+  );
+}
+
+export default function Scene() {
+  return (
     <>
-      <ambientLight intensity={0.2} />
-      {/* Golden/Warm lighting to match the logo vibe */}
-      <directionalLight position={[10, 10, 5]} intensity={2} color="#ffb86c" />
-      <directionalLight position={[-10, -10, -5]} intensity={0.5} color="#ffffff" />
-      <spotLight position={[0, 5, 0]} intensity={2} color="#ffb86c" penumbra={1} />
-      <Environment preset="night" />
+      <ambientLight intensity={0.5} />
+      <directionalLight position={[10, 10, 5]} intensity={1} color="#ffb86c" />
+      <Environment preset="city" />
 
-      {/* Main 3D Container */}
-      <group ref={group}>
-        
-        {/* Core Element - Representing the Figure in the Logo (Abstract Metallic Fluid/Shape) */}
-        <Float speed={2} rotationIntensity={0.2} floatIntensity={0.5}>
-          <mesh position={[0, -1, 0]}>
-            <capsuleGeometry args={[0.5, 1, 32, 64]} />
-            <MeshDistortMaterial 
-              color="#2a2220" 
-              envMapIntensity={2} 
-              clearcoat={1} 
-              clearcoatRoughness={0.2} 
-              metalness={0.9} 
-              roughness={0.2} 
-              distort={0.3} 
-              speed={1.5} 
-            />
-          </mesh>
-        </Float>
-
-        {/* Concentric Glowing Rings inspired by the Logo */}
-        <group position={[0, 1.5, 0]} rotation={[Math.PI / 2.5, 0, 0]}>
-          <Float speed={1.5} rotationIntensity={0.1} floatIntensity={0.2}>
-            {/* Inner Ring */}
-            <mesh ref={ring1}>
-              <torusGeometry args={[1.5, 0.03, 16, 100]} />
-              <meshStandardMaterial color="#ffe8b3" emissive="#ffb86c" emissiveIntensity={2} metalness={1} roughness={0.1} />
-            </mesh>
-            {/* Middle Ring */}
-            <mesh ref={ring2}>
-              <torusGeometry args={[2.2, 0.02, 16, 100]} />
-              <meshStandardMaterial color="#ffffff" emissive="#ffffff" emissiveIntensity={1} metalness={1} roughness={0.2} />
-            </mesh>
-            {/* Outer Ring */}
-            <mesh ref={ring3}>
-              <torusGeometry args={[3, 0.04, 16, 100]} />
-              <meshStandardMaterial color="#ffb86c" emissive="#ffb86c" emissiveIntensity={0.5} metalness={0.8} roughness={0.3} />
-            </mesh>
-          </Float>
-        </group>
-
-        {/* Floating Particles/Geometric dust */}
-        <Sparkles count={150} scale={12} size={2} speed={0.4} opacity={0.5} color="#ffb86c" />
-        
+      {/* Center the logo in the view */}
+      <group position={[0, 0, 0]}>
+        <ParticleLogo />
       </group>
 
-      {/* Subtle Star background */}
-      <Stars radius={50} depth={50} count={1000} factor={2} saturation={0} fade speed={1} />
-
-      {/* Bottom shadow reflection */}
-      <ContactShadows position={[0, -4, 0]} opacity={0.6} scale={30} blur={2.5} far={10} color="#000000" />
+      {/* Atmospheric dust */}
+      <Stars radius={50} depth={50} count={3000} factor={3} saturation={0} fade speed={1} />
     </>
   );
 }
