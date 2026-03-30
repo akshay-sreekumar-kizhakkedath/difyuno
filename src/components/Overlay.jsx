@@ -51,8 +51,8 @@ export default function Overlay() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full p-6 md:px-12 flex justify-between items-center mix-blend-difference pointer-events-auto z-50">
         <div className="flex items-center gap-3">
-          {/* Text fallback logo */}
-          <h2 className="text-xl font-bold tracking-widest text-white">D<span className="text-primary font-light">i</span>fyuno</h2>
+          {/* Logo is intentionally left blank here because the 3D logo will slide into this spot! */}
+          <div className="w-32 h-8"></div>
         </div>
         <div className="flex gap-6 items-center">
           <a href="#services" className="hidden md:block text-sm uppercase tracking-widest hover:text-primary transition-colors">Services</a>
