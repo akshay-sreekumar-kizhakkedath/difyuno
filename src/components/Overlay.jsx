@@ -51,7 +51,7 @@ export default function Overlay() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 w-full p-6 md:px-12 flex justify-between items-center mix-blend-difference pointer-events-auto z-50">
         <div className="flex items-center gap-3">
-          {/* Attempt to load the original image if available, else text fallback */}
+          {/* Text fallback logo */}
           <h2 className="text-xl font-bold tracking-widest text-white">D<span className="text-primary font-light">i</span>fyuno</h2>
         </div>
         <div className="flex gap-6 items-center">
@@ -63,24 +63,24 @@ export default function Overlay() {
         </div>
       </nav>
 
-      {/* Hero Section */}
-      <section className="h-screen flex flex-col justify-center items-center text-center px-4 pt-32">
+      {/* Hero Section - Shifted text to the bottom to give the 3D logo room to breathe */}
+      <section className="h-screen flex flex-col justify-end items-center text-center px-4 pb-12 md:pb-24">
         <div className="pointer-events-auto gsap-fade-up">
-          <div className="mb-6 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
+          <div className="mb-4 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
             01 — Who We Are
           </div>
-          <h1 className="text-[12vw] md:text-[8vw] font-bold leading-[0.9] tracking-tighter uppercase mb-6 drop-shadow-2xl text-white">
+          <h1 className="text-[12vw] md:text-[7.5vw] font-bold leading-[0.9] tracking-tighter uppercase mb-6 drop-shadow-2xl text-white">
             We Build <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
               Outcomes
             </span>
           </h1>
-          <p className="text-lg md:text-2xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
+          <p className="text-base md:text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
             The next generation of business won't be built on templates. <br className="hidden md:block" />
             They'll be built on intelligence.
           </p>
           
-          <div className="mt-12 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
+          <div className="mt-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#ffb86c]"></span>
             <span className="text-xs uppercase tracking-wider text-white/80">Available for new projects</span>
           </div>

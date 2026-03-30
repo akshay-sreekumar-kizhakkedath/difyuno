@@ -131,8 +131,8 @@ export default function Scene() {
       <directionalLight position={[10, 10, 5]} intensity={1} color="#ffb86c" />
       <Environment preset="city" />
 
-      {/* Center the logo in the view */}
-      <group position={[0, 0, 0]}>
+      {/* Move the logo up and scale it slightly so it floats above the text */}
+      <group position={[0, 1.8, 0]} scale={0.85}>
         <ParticleLogo />
       </group>
 
