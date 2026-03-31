@@ -129,9 +129,10 @@ function NeuralNetwork({ globalMousePos }) {
   const linesRef = useRef();
   const pointsRef = useRef();
   
-  // Configuration
-  const particleCount = 150;
-  const maxDistance = 5;
+  // Configuration - Reduce heavily on mobile to preserve frame rate
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  const particleCount = isMobile ? 40 : 150;
+  const maxDistance = isMobile ? 6 : 5;
   const radius = 15;
   
   // Generate random points in a sphere
@@ -299,7 +300,8 @@ function InteractiveGrains({ globalMousePos }) {
 
   const geometry = useMemo(() => {
     const geo = new THREE.BufferGeometry();
-    const count = 30000;
+    const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+    const count = isMobile ? 8000 : 30000;
     const positions = new Float32Array(count * 3);
     
     for(let i=0; i<count*3; i+=3) {

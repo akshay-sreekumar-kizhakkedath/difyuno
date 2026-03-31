@@ -86,8 +86,15 @@ gsap.registerPlugin(ScrollTrigger);
 function CustomCursor() {
   const cursorRef = useRef();
   const followerRef = useRef();
+  const [isTouch, setIsTouch] = useState(false);
 
   useEffect(() => {
+    // Detect if device uses touch pointer
+    if (window.matchMedia('(pointer: coarse)').matches) {
+      setIsTouch(true);
+      return;
+    }
+
     const onMouseMove = (e) => {
       // Move dot instantly
       gsap.to(cursorRef.current, {
@@ -107,6 +114,8 @@ function CustomCursor() {
     window.addEventListener('mousemove', onMouseMove);
     return () => window.removeEventListener('mousemove', onMouseMove);
   }, []);
+
+  if (isTouch) return null; // Don't render custom cursor on mobile
 
   return (
     <>

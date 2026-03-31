@@ -36,6 +36,8 @@ export default function App() {
           style={{ pointerEvents: 'none' }}
           eventSource={containerRef}
           eventPrefix="client"
+          dpr={[1, 1.5]}
+          gl={{ antialias: false, powerPreference: "high-performance" }}
         >
           <Scene />
         </Canvas>
