@@ -138,6 +138,39 @@ function CustomCursor() {
 export default function Overlay() {
   const overlayRef = useRef();
   const [isScrolled, setIsScrolled] = useState(false);
+  const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
+  const [formStatus, setFormStatus] = useState('idle'); // idle, submitting, success, error
+
+  const handleFormSubmit = async (e) => {
+    e.preventDefault();
+    setFormStatus('submitting');
+    
+    try {
+      const response = await fetch('http://localhost:3001/api/contact', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          message: `Phone: ${formData.phone}\n\n${formData.message}`
+        })
+      });
+      
+      const result = await response.json();
+      if (result.success) {
+        setFormStatus('success');
+        setFormData({ name: '', email: '', phone: '', message: '' });
+        setTimeout(() => setFormStatus('idle'), 5000);
+      } else {
+        setFormStatus('error');
+        setTimeout(() => setFormStatus('idle'), 5000);
+      }
+    } catch (error) {
+      console.error('Error submitting form:', error);
+      setFormStatus('error');
+      setTimeout(() => setFormStatus('idle'), 5000);
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -373,11 +406,14 @@ export default function Overlay() {
             {/* Subtle glow behind form */}
             <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
 
-            <form className="flex flex-col gap-6 relative z-10" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex flex-col gap-6 relative z-10" onSubmit={handleFormSubmit}>
               <div className="flex flex-col gap-2">
                  <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Name</label>
                  <input 
                    type="text" 
+                   required
+                   value={formData.name}
+                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors" 
                    placeholder="John Doe" 
                  />
@@ -387,6 +423,9 @@ export default function Overlay() {
                    <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Email</label>
                    <input 
                      type="email" 
+                     required
+                     value={formData.email}
+                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors" 
                      placeholder="john@example.com" 
                    />
@@ -395,6 +434,8 @@ export default function Overlay() {
                    <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Phone</label>
                    <input 
                      type="tel" 
+                     value={formData.phone}
+                     onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
                      className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors" 
                      placeholder="+1 (555) 000-0000" 
                    />
@@ -404,14 +445,19 @@ export default function Overlay() {
                  <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Message</label>
                  <textarea 
                    rows="4" 
+                   required
+                   value={formData.message}
+                   onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                    className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors resize-none" 
                    placeholder="Tell us about your project..."
                  ></textarea>
               </div>
               
-              <button className="awwwards-btn w-full py-4 mt-2 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-lg backdrop-blur-md cursor-pointer text-center">
-                 Send Message
+              <button disabled={formStatus === 'submitting'} className="awwwards-btn w-full py-4 mt-2 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-lg backdrop-blur-md cursor-pointer text-center disabled:opacity-50">
+                 {formStatus === 'submitting' ? 'Sending...' : formStatus === 'success' ? 'Sent!' : 'Send Message'}
               </button>
+              {formStatus === 'success' && <p className="text-xs text-primary text-center uppercase tracking-widest mt-2">Message sent successfully!</p>}
+              {formStatus === 'error' && <p className="text-xs text-red-500 text-center uppercase tracking-widest mt-2">Error sending message. Try again later.</p>}
             </form>
           </div>
 
