@@ -13,7 +13,7 @@ export default {
         accent: '#e6c387'
       },
       fontFamily: {
-        sans: ['Inter', 'sans-serif'],
+        sans: ['"VT323"', 'monospace'],
       }
     },
   },

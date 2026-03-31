@@ -242,7 +242,12 @@ export default function Overlay() {
       }`}>
         <div className="flex items-center gap-3">
           {/* Added an ID here so the 3D scene can track its exact position */}
-          <div id="logo-placeholder" className="w-32 md:w-48 h-10"></div>
+          <div 
+            id="logo-placeholder" 
+            className="w-32 md:w-48 h-10 cursor-pointer pointer-events-auto"
+            onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+            title="Back to top"
+          ></div>
         </div>
         <div className="flex gap-6 items-center pointer-events-auto">
           <a href="#services" className="hidden md:block text-sm uppercase tracking-widest link-underline transition-colors pointer-events-auto">Services</a>
@@ -268,7 +273,7 @@ export default function Overlay() {
           <div className="mb-4 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
             01 — Who We Are
           </div>
-          <h1 className="text-[12vw] md:text-[8vw] font-bold leading-[0.9] tracking-tighter uppercase mb-6 drop-shadow-2xl text-white">
+          <h1 className="text-[12vw] md:text-[8vw] font-bold leading-[0.9] tracking-normal uppercase mb-6 drop-shadow-2xl text-white">
             We Build <br/>
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
               Outcomes
@@ -295,7 +300,7 @@ export default function Overlay() {
             <div className="mb-6 text-accent tracking-[0.3em] text-xs uppercase font-semibold">
               02 — What We Do
             </div>
-            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-tight leading-tight text-white hover:text-primary transition-colors duration-500">
+            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-normal leading-tight text-white hover:text-primary transition-colors duration-500">
               Intelligence <br/>at Scale.
             </h2>
             <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
@@ -324,7 +329,7 @@ export default function Overlay() {
             <div className="mb-6 text-primary tracking-[0.3em] text-xs uppercase font-semibold">
               03 — The Philosophy
             </div>
-            <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-tight text-white hover:text-accent transition-colors duration-500">
+            <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-normal text-white hover:text-accent transition-colors duration-500">
               Immersive <br/>Experiences.
             </h2>
             <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
@@ -341,16 +346,66 @@ export default function Overlay() {
       </section>
 
       {/* Final CTA / Footer */}
-      <section id="contact" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
+      <section id="contact" className="min-h-screen flex items-center justify-center px-6 md:px-24 py-24 relative overflow-hidden pointer-events-none">
         <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none z-0"></div>
-        <div className="relative z-10 max-w-4xl pointer-events-auto stagger-fade-up">
-          <h2 className="text-6xl md:text-9xl font-bold mb-8 tracking-tighter text-white">Ready?</h2>
-          <p className="text-xl md:text-2xl text-white/50 mb-12 font-light">
-            Fourteen days. One outcome. Zero excuses.<br/>Let's turn your idea into something real.
-          </p>
-          <a href="mailto:hello@difyuno.com" className="awwwards-btn z-[1] inline-block px-12 py-6 border border-primary text-white font-bold uppercase tracking-widest text-sm rounded-full cursor-pointer transition-all">
-            Start Your 14-Day Build
-          </a>
+        
+        <div className="relative z-10 w-full max-w-7xl mx-auto pointer-events-auto stagger-fade-up grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-24 items-center">
+          
+          {/* Left Side: Copy */}
+          <div className="text-left">
+            <h2 className="text-6xl md:text-8xl font-bold mb-6 tracking-normal text-white">Let's <br/>Build.</h2>
+            <p className="text-xl md:text-2xl text-white/50 mb-8 font-light leading-relaxed">
+              Fourteen days. One outcome. Zero excuses.<br/>Send us a message and we'll get back to you within 24 hours.
+            </p>
+          </div>
+
+          {/* Right Side: Glass Form */}
+          <div className="glass-card p-8 md:p-10 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md relative overflow-hidden">
+            {/* Subtle glow behind form */}
+            <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/20 rounded-full blur-[80px] pointer-events-none"></div>
+
+            <form className="flex flex-col gap-6 relative z-10" onSubmit={(e) => e.preventDefault()}>
+              <div className="flex flex-col gap-2">
+                 <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Name</label>
+                 <input 
+                   type="text" 
+                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors" 
+                   placeholder="John Doe" 
+                 />
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="flex flex-col gap-2">
+                   <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Email</label>
+                   <input 
+                     type="email" 
+                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors" 
+                     placeholder="john@example.com" 
+                   />
+                </div>
+                <div className="flex flex-col gap-2">
+                   <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Phone</label>
+                   <input 
+                     type="tel" 
+                     className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors" 
+                     placeholder="+1 (555) 000-0000" 
+                   />
+                </div>
+              </div>
+              <div className="flex flex-col gap-2">
+                 <label className="text-xs uppercase tracking-widest text-white/50 font-semibold">Message</label>
+                 <textarea 
+                   rows="4" 
+                   className="w-full bg-white/5 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-white/20 focus:outline-none focus:border-primary focus:bg-white/10 transition-colors resize-none" 
+                   placeholder="Tell us about your project..."
+                 ></textarea>
+              </div>
+              
+              <button className="awwwards-btn w-full py-4 mt-2 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-lg backdrop-blur-md cursor-pointer text-center">
+                 Send Message
+              </button>
+            </form>
+          </div>
+
         </div>
       </section>
 

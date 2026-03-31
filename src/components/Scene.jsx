@@ -1,6 +1,6 @@
 import { useRef, useMemo, useState } from 'react';
 import { useFrame, extend, useThree } from '@react-three/fiber';
-import { useTexture, Environment, shaderMaterial } from '@react-three/drei';
+import { useTexture, Environment, shaderMaterial, Float, Edges } from '@react-three/drei';
 import * as THREE from 'three';
 
 // --------------------------------------------------------
@@ -123,6 +123,139 @@ extend({ LiquidLogoMaterial, InteractiveGrainMaterial });
 // --------------------------------------------------------
 // COMPONENTS
 // --------------------------------------------------------
+
+function NeuralNetwork({ globalMousePos }) {
+  const groupRef = useRef();
+  const linesRef = useRef();
+  const pointsRef = useRef();
+  
+  // Configuration
+  const particleCount = 150;
+  const maxDistance = 5;
+  const radius = 15;
+  
+  // Generate random points in a sphere
+  const [positions, velocities] = useMemo(() => {
+    const pos = new Float32Array(particleCount * 3);
+    const vel = [];
+    for (let i = 0; i < particleCount; i++) {
+      // Random position in a sphere
+      const r = radius * Math.cbrt(Math.random());
+      const theta = Math.random() * 2 * Math.PI;
+      const phi = Math.acos(2 * Math.random() - 1);
+      
+      pos[i * 3] = r * Math.sin(phi) * Math.cos(theta);
+      pos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      pos[i * 3 + 2] = r * Math.cos(phi);
+      
+      // Random velocity
+      vel.push(new THREE.Vector3(
+        (Math.random() - 0.5) * 0.05,
+        (Math.random() - 0.5) * 0.05,
+        (Math.random() - 0.5) * 0.05
+      ));
+    }
+    return [pos, vel];
+  }, [particleCount, radius]);
+
+  // Pre-allocate arrays for line segments (max possible connections)
+  // We'll update the draw range dynamically
+  const lineGeometry = useMemo(() => {
+    const geo = new THREE.BufferGeometry();
+    const maxLines = (particleCount * (particleCount - 1)) / 2;
+    const linePositions = new Float32Array(maxLines * 6); // 2 vertices per line, 3 coords each
+    const lineOpacities = new Float32Array(maxLines * 2); // 1 opacity per vertex
+    geo.setAttribute('position', new THREE.BufferAttribute(linePositions, 3));
+    geo.setAttribute('opacity', new THREE.BufferAttribute(lineOpacities, 1)); // We might not use custom attribute if we just use basic material, but let's stick to basic for now.
+    return geo;
+  }, [particleCount]);
+
+  useFrame(() => {
+    if (!groupRef.current || !pointsRef.current || !linesRef.current) return;
+    
+    const pos = pointsRef.current.geometry.attributes.position.array;
+    const linePos = linesRef.current.geometry.attributes.position.array;
+    
+    let lineIndex = 0;
+    
+    // Update particle positions
+    for (let i = 0; i < particleCount; i++) {
+      let x = pos[i * 3];
+      let y = pos[i * 3 + 1];
+      let z = pos[i * 3 + 2];
+      
+      const v = velocities[i];
+      x += v.x;
+      y += v.y;
+      z += v.z;
+      
+      // Keep within bounds (bounce)
+      if (Math.abs(x) > radius) v.x *= -1;
+      if (Math.abs(y) > radius) v.y *= -1;
+      if (Math.abs(z) > radius) v.z *= -1;
+      
+      pos[i * 3] = x;
+      pos[i * 3 + 1] = y;
+      pos[i * 3 + 2] = z;
+      
+      // Check connections with other particles
+      for (let j = i + 1; j < particleCount; j++) {
+        const dx = x - pos[j * 3];
+        const dy = y - pos[j * 3 + 1];
+        const dz = z - pos[j * 3 + 2];
+        const distSq = dx * dx + dy * dy + dz * dz;
+        
+        if (distSq < maxDistance * maxDistance) {
+          // Add line segment
+          linePos[lineIndex++] = x;
+          linePos[lineIndex++] = y;
+          linePos[lineIndex++] = z;
+          
+          linePos[lineIndex++] = pos[j * 3];
+          linePos[lineIndex++] = pos[j * 3 + 1];
+          linePos[lineIndex++] = pos[j * 3 + 2];
+        }
+      }
+    }
+    
+    pointsRef.current.geometry.attributes.position.needsUpdate = true;
+    linesRef.current.geometry.attributes.position.needsUpdate = true;
+    linesRef.current.geometry.setDrawRange(0, lineIndex / 3);
+    
+    // Slowly rotate the whole network
+    groupRef.current.rotation.y += 0.002;
+    groupRef.current.rotation.x += 0.001;
+    
+    // Subtle mouse interaction
+    if (globalMousePos.current) {
+       groupRef.current.position.x = THREE.MathUtils.lerp(groupRef.current.position.x, globalMousePos.current.x * 0.1, 0.05);
+       groupRef.current.position.y = THREE.MathUtils.lerp(groupRef.current.position.y, globalMousePos.current.y * 0.1, 0.05);
+    }
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 0, -25]}>
+      {/* The Nodes */}
+      <points ref={pointsRef}>
+        <bufferGeometry>
+          <bufferAttribute 
+            attach="attributes-position" 
+            count={particleCount} 
+            array={positions} 
+            itemSize={3} 
+          />
+        </bufferGeometry>
+        {/* Glowy Orange/Gold nodes representing data points */}
+        <pointsMaterial size={0.3} color="#ffb86c" transparent opacity={0.8} sizeAttenuation={true} />
+      </points>
+      
+      {/* The Connecting Lines */}
+      <lineSegments ref={linesRef} geometry={lineGeometry}>
+        <lineBasicMaterial color="#e6c387" transparent opacity={0.15} />
+      </lineSegments>
+    </group>
+  );
+}
 
 function LiquidLogo() {
   const materialRef = useRef();
@@ -305,6 +438,9 @@ export default function Scene() {
 
       {/* Interactive Background Grains */}
       <InteractiveGrains globalMousePos={globalMousePos} />
+
+      {/* Deep Tech AI Constellation */}
+      <NeuralNetwork globalMousePos={globalMousePos} />
 
       {/* Main Logo Container */}
       <group ref={group}>
