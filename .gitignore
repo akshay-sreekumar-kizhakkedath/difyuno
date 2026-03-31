@@ -1,0 +1,9 @@
+node_modules/
+dist/
+.DS_Store
+*.local
+.env
+.env.*
+
+# Exclude large video frame assets — host via CDN or cloud storage instead
+public/assets/frames/
