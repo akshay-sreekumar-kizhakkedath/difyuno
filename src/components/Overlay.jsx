@@ -235,24 +235,24 @@ export default function Overlay() {
       <CustomCursor />
 
       {/* Navigation */}
-      <nav className={`nav-container fixed top-0 left-0 w-full p-6 md:px-12 flex justify-between items-center pointer-events-none z-50 transition-all duration-500 ${
+      <nav className={`nav-container fixed top-0 left-0 w-full p-4 md:p-6 md:px-12 flex justify-between items-center pointer-events-none z-50 transition-all duration-500 ${
         isScrolled 
           ? "bg-black/40 backdrop-blur-md border-b border-white/10 pointer-events-auto" 
           : "mix-blend-difference"
       }`}>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 shrink-0">
           {/* Added an ID here so the 3D scene can track its exact position */}
           <div 
             id="logo-placeholder" 
-            className="w-32 md:w-48 h-10 cursor-pointer pointer-events-auto"
+            className="w-24 md:w-48 h-8 md:h-10 cursor-pointer pointer-events-auto shrink-0"
             onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
             title="Back to top"
           ></div>
         </div>
-        <div className="flex gap-6 items-center pointer-events-auto">
+        <div className="flex gap-4 md:gap-6 items-center pointer-events-auto shrink-0">
           <a href="#services" className="hidden md:block text-sm uppercase tracking-widest link-underline transition-colors pointer-events-auto">Services</a>
           <a href="#work" className="hidden md:block text-sm uppercase tracking-widest link-underline transition-colors pointer-events-auto">Work</a>
-          <a href="#contact" className="awwwards-btn z-[1] px-6 py-2.5 border border-white/20 rounded-full text-sm tracking-widest uppercase backdrop-blur-md pointer-events-auto relative">
+          <a href="#contact" className="awwwards-btn z-[1] px-4 py-2 md:px-6 md:py-2.5 border border-white/20 rounded-full text-xs md:text-sm tracking-widest uppercase backdrop-blur-md pointer-events-auto relative whitespace-nowrap">
             Start Building
           </a>
         </div>
