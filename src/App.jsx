@@ -1,10 +1,12 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Lenis from 'lenis';
 import Scene from './components/Scene';
 import Overlay from './components/Overlay';
 
 export default function App() {
+  const containerRef = useRef();
+
   useEffect(() => {
     const lenis = new Lenis({
       duration: 1.5,
@@ -22,16 +24,22 @@ export default function App() {
   }, []);
 
   return (
-    <div className="relative w-full">
+    <div ref={containerRef} className="relative w-full">
+      {/* HTML Foreground Overlay (Nav and content) */}
+      <Overlay />
+
       {/* 3D Canvas Background */}
-      <div className="fixed top-0 left-0 w-full h-screen z-0 pointer-events-none">
-        <Canvas camera={{ position: [0, 0, 8], fov: 50 }}>
+      {/* Force pointer-events-none completely so it never intercepts hovers/clicks */}
+      <div className="fixed top-0 left-0 w-full h-screen z-50 pointer-events-none" style={{ pointerEvents: 'none' }}>
+        <Canvas 
+          camera={{ position: [0, 0, 8], fov: 50 }}
+          style={{ pointerEvents: 'none' }}
+          eventSource={containerRef}
+          eventPrefix="client"
+        >
           <Scene />
         </Canvas>
       </div>
-
-      {/* HTML Foreground Overlay */}
-      <Overlay />
     </div>
   );
 }

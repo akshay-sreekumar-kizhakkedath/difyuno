@@ -2,6 +2,84 @@ import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
+const customStyles = `
+  .awwwards-btn {
+    position: relative;
+    overflow: hidden;
+    /* Avoid 'transition: all' so it doesn't fight GSAP transform animations */
+    transition: color 0.4s cubic-bezier(0.23, 1, 0.32, 1), border-color 0.4s, box-shadow 0.4s, transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    background: transparent;
+    cursor: pointer;
+  }
+  .awwwards-btn::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: #ffb86c;
+    transition: left 0.4s cubic-bezier(0.23, 1, 0.32, 1);
+    z-index: -1;
+  }
+  .awwwards-btn:hover::before {
+    left: 0;
+  }
+  .awwwards-btn:hover {
+    color: #000 !important;
+    border-color: #ffb86c;
+    box-shadow: 0 0 20px rgba(255, 184, 108, 0.5);
+    transform: translateY(-4px) scale(1.02);
+  }
+  .awwwards-btn:active {
+    transform: translateY(0) scale(0.98);
+  }
+  
+  .link-underline {
+    position: relative;
+    display: inline-block;
+    transition: color 0.3s ease;
+  }
+  .link-underline:hover {
+    color: #ffb86c;
+  }
+  .link-underline::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    transform: scaleX(0);
+    height: 1px;
+    bottom: -2px;
+    left: 0;
+    background-color: #ffb86c;
+    transform-origin: bottom right;
+    transition: transform 0.4s cubic-bezier(0.86, 0, 0.07, 1);
+  }
+  .link-underline:hover::after {
+    transform: scaleX(1);
+    transform-origin: bottom left;
+  }
+  
+  .glass-card {
+    position: relative;
+    overflow: hidden;
+  }
+  .glass-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 50%;
+    height: 100%;
+    background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,184,108,0.1) 50%, rgba(255,255,255,0) 100%);
+    transform: skewX(-25deg);
+    transition: left 0.6s ease-in-out;
+  }
+  .glass-card:hover::before {
+    left: 200%;
+  }
+`;
+
 gsap.registerPlugin(ScrollTrigger);
 
 // Custom Cursor Component
@@ -35,12 +113,14 @@ function CustomCursor() {
       {/* Outer trailing circle */}
       <div 
         ref={followerRef} 
-        className="fixed top-0 left-0 w-10 h-10 border border-primary/50 rounded-full pointer-events-none z-[100] -translate-x-1/2 -translate-y-1/2 mix-blend-screen"
+        className="fixed top-0 left-0 w-10 h-10 border border-primary/50 rounded-full z-[100] -translate-x-1/2 -translate-y-1/2 mix-blend-screen pointer-events-none"
+        style={{ pointerEvents: 'none' }}
       />
       {/* Inner glowing dot */}
       <div 
         ref={cursorRef} 
-        className="fixed top-0 left-0 w-2 h-2 bg-primary rounded-full pointer-events-none z-[100] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_#ffb86c]"
+        className="fixed top-0 left-0 w-2 h-2 bg-primary rounded-full z-[100] -translate-x-1/2 -translate-y-1/2 shadow-[0_0_10px_#ffb86c] pointer-events-none"
+        style={{ pointerEvents: 'none' }}
       />
     </>
   );
@@ -48,19 +128,62 @@ function CustomCursor() {
 
 export default function Overlay() {
   const overlayRef = useRef();
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      // The 3D logo finishes scaling/moving when scrollY reaches 100vh
+      if (window.scrollY >= window.innerHeight) {
+        setIsScrolled(true);
+      } else {
+        setIsScrolled(false);
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    // Initial check
+    handleScroll();
+
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      gsap.utils.toArray('.gsap-fade-up').forEach(element => {
-        gsap.fromTo(element, 
-          { opacity: 0, y: 80 },
+      // 1. Initial Load Animations
+      gsap.fromTo('.nav-container', 
+        { y: -100, opacity: 0 },
+        { y: 0, opacity: 1, duration: 1.2, ease: 'power3.out', delay: 0.2 }
+      );
+      
+      gsap.fromTo('.scroll-indicator',
+        { opacity: 0 },
+        { opacity: 1, duration: 2, delay: 1.5 }
+      );
+
+      gsap.to('.scroll-indicator', {
+        opacity: 0,
+        scrollTrigger: {
+          trigger: '.scroll-indicator',
+          start: "top 90%",
+          end: "top 50%",
+          scrub: true
+        }
+      });
+
+      // 2. Staggered Fade Up for Content Sections
+      gsap.utils.toArray('.stagger-fade-up').forEach(container => {
+        // Animate direct children sequentially
+        const elements = container.children;
+        gsap.fromTo(elements, 
+          { opacity: 0, y: 60 },
           {
             opacity: 1,
             y: 0,
-            duration: 1.2,
+            duration: 1,
+            stagger: 0.15,
             ease: "power3.out",
             scrollTrigger: {
-              trigger: element,
+              trigger: container,
               start: "top 85%",
               toggleActions: "play none none reverse"
             }
@@ -68,6 +191,26 @@ export default function Overlay() {
         );
       });
 
+      // 3. Pop-in animation for Glass Cards
+      gsap.utils.toArray('.cards-container').forEach(container => {
+        const cards = container.querySelectorAll('.glass-card');
+        gsap.fromTo(cards,
+          { opacity: 0, y: 50, scale: 0.95 },
+          {
+            opacity: 1, y: 0, scale: 1,
+            duration: 0.8,
+            stagger: 0.2,
+            ease: "back.out(1.5)",
+            scrollTrigger: {
+              trigger: container,
+              start: "top 85%",
+              toggleActions: "play none none reverse"
+            }
+          }
+        );
+      });
+
+      // 4. Parallax Elements
       gsap.utils.toArray('.gsap-parallax').forEach(element => {
         gsap.to(element, {
           y: -100,
@@ -80,6 +223,7 @@ export default function Overlay() {
           }
         });
       });
+
     }, overlayRef);
 
     return () => ctx.revert();
@@ -87,18 +231,23 @@ export default function Overlay() {
 
   return (
     <div ref={overlayRef} className="relative z-10 w-full pointer-events-none">
-      
+      <style>{customStyles}</style>
       <CustomCursor />
 
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 w-full p-6 md:px-12 flex justify-between items-center mix-blend-difference pointer-events-auto z-50">
+      <nav className={`nav-container fixed top-0 left-0 w-full p-6 md:px-12 flex justify-between items-center pointer-events-none z-50 transition-all duration-500 ${
+        isScrolled 
+          ? "bg-black/40 backdrop-blur-md border-b border-white/10 pointer-events-auto" 
+          : "mix-blend-difference"
+      }`}>
         <div className="flex items-center gap-3">
-          <div className="w-32 h-8"></div>
+          {/* Added an ID here so the 3D scene can track its exact position */}
+          <div id="logo-placeholder" className="w-32 md:w-48 h-10"></div>
         </div>
-        <div className="flex gap-6 items-center">
-          <a href="#services" className="hidden md:block text-sm uppercase tracking-widest hover:text-primary transition-colors">Services</a>
-          <a href="#work" className="hidden md:block text-sm uppercase tracking-widest hover:text-primary transition-colors">Work</a>
-          <a href="#contact" className="px-6 py-2.5 border border-white/20 rounded-full hover:bg-white hover:text-black transition-all text-sm tracking-widest uppercase backdrop-blur-md bg-white/5">
+        <div className="flex gap-6 items-center pointer-events-auto">
+          <a href="#services" className="hidden md:block text-sm uppercase tracking-widest link-underline transition-colors pointer-events-auto">Services</a>
+          <a href="#work" className="hidden md:block text-sm uppercase tracking-widest link-underline transition-colors pointer-events-auto">Work</a>
+          <a href="#contact" className="awwwards-btn z-[1] px-6 py-2.5 border border-white/20 rounded-full text-sm tracking-widest uppercase backdrop-blur-md pointer-events-auto relative">
             Start Building
           </a>
         </div>
@@ -107,15 +256,15 @@ export default function Overlay() {
       {/* Screen 1: Pure 3D Logo Stage */}
       {/* Removed pointer-events-auto from the massive section wrapper so the 3D canvas underneath can receive mouse movements! */}
       <section className="h-screen flex flex-col justify-end items-center pb-12">
-        <div className="text-white/30 text-xs uppercase tracking-[0.3em] animate-pulse pointer-events-none">
+        <div className="scroll-indicator text-white/30 text-xs uppercase tracking-[0.3em] animate-pulse pointer-events-none">
           Scroll to discover
         </div>
       </section>
 
       {/* Screen 2: Hero Content */}
-      <section className="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20">
+      <section className="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20 pointer-events-none">
         {/* Only the content block gets pointer-events-auto */}
-        <div className="pointer-events-auto gsap-fade-up">
+        <div className="pointer-events-auto stagger-fade-up relative z-10">
           <div className="mb-4 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
             01 — Who We Are
           </div>
@@ -130,9 +279,9 @@ export default function Overlay() {
             They'll be built on intelligence.
           </p>
           
-          <div className="mt-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm hover:bg-white/10 transition-colors cursor-pointer">
-            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#ffb86c]"></span>
-            <span className="text-xs uppercase tracking-wider text-white/80">Available for new projects</span>
+          <div className="mt-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 backdrop-blur-sm transition-all duration-300 cursor-pointer hover:bg-primary/20 hover:border-primary/50 hover:-translate-y-1 hover:scale-105 active:scale-95 active:translate-y-0 group">
+            <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#ffb86c] group-hover:bg-white group-hover:shadow-[0_0_10px_#fff] transition-colors"></span>
+            <span className="text-xs uppercase tracking-wider text-white/80 group-hover:text-white transition-colors">Available for new projects</span>
           </div>
         </div>
       </section>
@@ -142,7 +291,7 @@ export default function Overlay() {
       {/* Services Intro Section */}
       <section id="services" className="min-h-screen flex items-center px-8 md:px-24">
         <div className="max-w-3xl pointer-events-auto">
-          <div className="gsap-fade-up">
+          <div className="stagger-fade-up">
             <div className="mb-6 text-accent tracking-[0.3em] text-xs uppercase font-semibold">
               02 — What We Do
             </div>
@@ -152,15 +301,15 @@ export default function Overlay() {
             <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
               Turn your "what if" into a functional AI reality in 14 days. We leverage cutting-edge WebGL, React Three Fiber, and high-performance engineering to build award-winning experiences.
             </p>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16">
-              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
-                <h3 className="text-2xl font-semibold mb-3 text-white">AI-Powered MVP</h3>
-                <p className="text-white/50 text-sm leading-relaxed">Stop waiting months. We use Vibe Coding to ship full-stack AI-integrated MVPs in 14 days.</p>
-              </div>
-              <div className="p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
-                <h3 className="text-2xl font-semibold mb-3 text-white">Workflow Agents</h3>
-                <p className="text-white/50 text-sm leading-relaxed">Digital employees that handle leads, manage CRM, and automate repetitive tasks automatically.</p>
-              </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16 cards-container">
+            <div className="glass-card p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
+              <h3 className="text-2xl font-semibold mb-3 text-white">AI-Powered MVP</h3>
+              <p className="text-white/50 text-sm leading-relaxed">Stop waiting months. We use Vibe Coding to ship full-stack AI-integrated MVPs in 14 days.</p>
+            </div>
+            <div className="glass-card p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
+              <h3 className="text-2xl font-semibold mb-3 text-white">Workflow Agents</h3>
+              <p className="text-white/50 text-sm leading-relaxed">Digital employees that handle leads, manage CRM, and automate repetitive tasks automatically.</p>
             </div>
           </div>
         </div>
@@ -171,7 +320,7 @@ export default function Overlay() {
       {/* Immersive 3D Text Parallax Section */}
       <section className="min-h-screen flex items-center justify-end px-8 md:px-24 text-right">
         <div className="max-w-2xl pointer-events-auto">
-          <div className="gsap-fade-up">
+          <div className="stagger-fade-up">
             <div className="mb-6 text-primary tracking-[0.3em] text-xs uppercase font-semibold">
               03 — The Philosophy
             </div>
@@ -183,8 +332,8 @@ export default function Overlay() {
             </p>
           </div>
           
-          <div className="gsap-parallax mt-12">
-            <button className="px-10 py-5 bg-white text-black font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 transition-transform shadow-[0_0_40px_rgba(255,184,108,0.3)] hover:shadow-[0_0_60px_rgba(255,184,108,0.6)] cursor-pointer">
+          <div className="gsap-parallax mt-12 w-fit ml-auto">
+            <button className="awwwards-btn z-[1] px-10 py-5 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-full backdrop-blur-md cursor-pointer">
               View Our Work
             </button>
           </div>
@@ -194,12 +343,12 @@ export default function Overlay() {
       {/* Final CTA / Footer */}
       <section id="contact" className="min-h-screen flex flex-col items-center justify-center text-center px-4 relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-t from-primary/5 to-transparent pointer-events-none z-0"></div>
-        <div className="relative z-10 max-w-4xl pointer-events-auto gsap-fade-up">
+        <div className="relative z-10 max-w-4xl pointer-events-auto stagger-fade-up">
           <h2 className="text-6xl md:text-9xl font-bold mb-8 tracking-tighter text-white">Ready?</h2>
           <p className="text-xl md:text-2xl text-white/50 mb-12 font-light">
             Fourteen days. One outcome. Zero excuses.<br/>Let's turn your idea into something real.
           </p>
-          <a href="mailto:hello@difyuno.com" className="inline-block px-12 py-6 bg-gradient-to-r from-primary to-accent text-black font-bold uppercase tracking-widest text-sm rounded-full hover:scale-105 hover:shadow-[0_0_60px_rgba(255,184,108,0.5)] transition-all cursor-pointer">
+          <a href="mailto:hello@difyuno.com" className="awwwards-btn z-[1] inline-block px-12 py-6 border border-primary text-white font-bold uppercase tracking-widest text-sm rounded-full cursor-pointer transition-all">
             Start Your 14-Day Build
           </a>
         </div>

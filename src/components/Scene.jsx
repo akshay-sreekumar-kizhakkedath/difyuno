@@ -26,8 +26,9 @@ const LiquidLogoMaterial = shaderMaterial(
       float dist = distance(uv, uMouse);
       
       // Much stronger and continuous wave
-      float wave = sin(dist * 50.0 - uTime * 10.0);
-      float ripple = wave * 0.25 * smoothstep(0.8, 0.0, dist);
+      float wave = sin(dist * 30.0 - uTime * 5.0);
+      // Severely limit the radius and strength so it only wobbles when cursor is directly over it
+      float ripple = wave * 0.05 * smoothstep(0.3, 0.0, dist) * uHover;
       pos.z += ripple;
 
       gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
@@ -45,8 +46,8 @@ const LiquidLogoMaterial = shaderMaterial(
       
       float dist = distance(uv, uMouse);
       
-      float wave = sin(dist * 50.0 - uTime * 10.0);
-      float ripple = wave * 0.05 * smoothstep(0.8, 0.0, dist);
+      float wave = sin(dist * 30.0 - uTime * 5.0);
+      float ripple = wave * 0.02 * smoothstep(0.3, 0.0, dist) * uHover;
       
       uv += vec2(ripple);
 
@@ -57,7 +58,7 @@ const LiquidLogoMaterial = shaderMaterial(
         discard;
       }
       
-      float highlight = smoothstep(0.9, 1.0, wave) * 0.3 * smoothstep(0.8, 0.0, dist);
+      float highlight = smoothstep(0.9, 1.0, wave) * 0.15 * smoothstep(0.3, 0.0, dist) * uHover;
       color.rgb += vec3(highlight);
 
       gl_FragColor = vec4(color.rgb, 1.0);
@@ -83,10 +84,10 @@ const InteractiveGrainMaterial = shaderMaterial(
       
       float dist = distance(pos, uMouse);
       
-      float influenceRadius = 8.0; // Increased radius
+      float influenceRadius = 6.0; // Reduced interaction radius
       if(dist < influenceRadius) {
          vec3 dir = normalize(pos - uMouse);
-         float pushStrength = (influenceRadius - dist) * 1.2; // Increased strength
+         float pushStrength = (influenceRadius - dist) * 2.0; // Slightly snappier push but much smaller radius
          
          pos.x += dir.x * pushStrength;
          pos.y += dir.y * pushStrength;
@@ -97,11 +98,13 @@ const InteractiveGrainMaterial = shaderMaterial(
       pos.y += cos(uTime * 0.2 + pos.x) * 0.05;
 
       vec4 mvPosition = modelViewMatrix * vec4(pos, 1.0);
-      gl_PointSize = 3.5 * (1.0 / -mvPosition.z);
+      // Increased point size to make grains clearly visible
+      gl_PointSize = 16.0 * (1.0 / -mvPosition.z);
       gl_Position = projectionMatrix * mvPosition;
       
       float centerDist = length(pos.xy);
-      vAlpha = smoothstep(35.0, 0.0, centerDist) * 0.6;
+      // Pushed alpha multiplier past 1.0 for stronger additive blending / brightness
+      vAlpha = smoothstep(50.0, 0.0, centerDist) * 2.0;
     }
   `,
   `
@@ -109,7 +112,8 @@ const InteractiveGrainMaterial = shaderMaterial(
     void main() {
       float d = distance(gl_PointCoord, vec2(0.5));
       if(d > 0.5) discard;
-      gl_FragColor = vec4(1.0, 0.95, 0.85, vAlpha * (1.0 - (d * 2.0)));
+      // Made grains brighter and core more solid so they show up on low brightness
+      gl_FragColor = vec4(1.0, 0.9, 0.7, vAlpha * (1.0 - d));
     }
   `
 );
@@ -120,21 +124,31 @@ extend({ LiquidLogoMaterial, InteractiveGrainMaterial });
 // COMPONENTS
 // --------------------------------------------------------
 
-function LiquidLogo({ globalMouseUv }) {
+function LiquidLogo() {
   const materialRef = useRef();
   const texture = useTexture('/assets/logo.png');
+  const [hovered, setHovered] = useState(false);
+  const targetHover = useRef(0);
 
   useFrame((state) => {
     if (materialRef.current) {
       materialRef.current.uTime = state.clock.getElapsedTime();
       
-      // Update logo shader with global mouse UV passed from parent
-      materialRef.current.uMouse.lerp(globalMouseUv.current, 0.1);
+      targetHover.current = THREE.MathUtils.lerp(targetHover.current, hovered ? 1 : 0, 0.1);
+      materialRef.current.uHover = targetHover.current;
     }
   });
 
   return (
-    <mesh>
+    <mesh 
+      onPointerOver={() => setHovered(true)} 
+      onPointerOut={() => setHovered(false)}
+      onPointerMove={(e) => {
+        if(materialRef.current) {
+          materialRef.current.uMouse.copy(e.uv);
+        }
+      }}
+    >
       <planeGeometry args={[8, 8, 128, 128]} />
       <liquidLogoMaterial 
         ref={materialRef} 
@@ -189,16 +203,11 @@ export default function Scene() {
   const { viewport, camera } = useThree();
   
   // Track mouse globally without relying on raycasting intersection
-  const globalMouseUv = useRef(new THREE.Vector2(0.5, 0.5));
   const globalMousePos = useRef(new THREE.Vector3(0, 0, 0));
   const vec = new THREE.Vector3();
 
   useFrame((state) => {
     // 1. Calculate global mouse position continuously
-    const targetX = state.pointer.x * 0.5 + 0.5;
-    const targetY = state.pointer.y * 0.5 + 0.5;
-    globalMouseUv.current.set(targetX, targetY);
-
     vec.set(state.pointer.x, state.pointer.y, 0.5);
     vec.unproject(camera);
     vec.sub(camera.position).normalize();
@@ -212,27 +221,79 @@ export default function Scene() {
     if (group.current) {
       const scrollProgress = THREE.MathUtils.clamp(scrollY / vh, 0, 1);
       
-      const startScale = 1.8;
-      const endScale = 0.25; 
+      // Dynamic start scale to ensure logo fits 85% of the smallest screen dimension
+      const baseSize = 8.0; 
+      const startScale = (Math.min(viewport.width, viewport.height) * 0.85) / baseSize;
+      
+      // Calculate exact position based on the actual DOM element
+      const placeholder = document.getElementById('logo-placeholder');
+      let posAtZZero = new THREE.Vector3(0, 0, 0);
+      let endScale = 0.25;
+
+      if (placeholder) {
+        const rect = placeholder.getBoundingClientRect();
+        const winW = window.innerWidth;
+        const winH = window.innerHeight;
+
+        // Target center of the placeholder in screen coordinates
+        const targetScreenX = rect.left + rect.width / 2;
+        
+        // Fix vertical alignment: explicitly use the center of the entire navbar element
+        // instead of just the placeholder div, so it strictly aligns with the right-side buttons.
+        const navElement = placeholder.closest('nav');
+        let targetScreenY = rect.top + rect.height / 2;
+        
+        if (navElement) {
+           const navRect = navElement.getBoundingClientRect();
+           // Decreased the visual offset slightly to nudge the logo up just a bit.
+           const visualVerticalOffset = 20; 
+           targetScreenY = (navRect.top + navRect.height / 2) + visualVerticalOffset;
+        }
+
+        // Convert screen coordinates to normalized device coordinates (-1 to +1)
+        const ndcX = (targetScreenX / winW) * 2 - 1;
+        const ndcY = -(targetScreenY / winH) * 2 + 1;
+
+        // Unproject to find the world position at z=0
+        const vector = new THREE.Vector3(ndcX, ndcY, 0);
+        vector.unproject(camera);
+        
+        const dir = vector.sub(camera.position).normalize();
+        const distanceToZZero = -camera.position.z / dir.z;
+        posAtZZero = camera.position.clone().add(dir.multiplyScalar(distanceToZZero));
+
+        // Calculate world units per pixel at z=0
+        const vFov = (camera.fov * Math.PI) / 180;
+        const visibleHeightAtZZero = 2 * Math.tan(vFov / 2) * camera.position.z;
+        const visibleWidthAtZZero = visibleHeightAtZZero * camera.aspect;
+        const unitsPerPixel = visibleWidthAtZZero / winW;
+        
+        // Because the PNG logo image has some transparent padding around it,
+        // we need to multiply its final size to visually match the placeholder box.
+        // Reduced to 1.0 to make the final logo slightly smaller
+        const visualCompensation = 1.0; 
+        const desiredWorldWidth = rect.width * unitsPerPixel * visualCompensation;
+        endScale = desiredWorldWidth / baseSize;
+      }
+
       const currentScale = THREE.MathUtils.lerp(startScale, endScale, scrollProgress);
       group.current.scale.set(currentScale, currentScale, currentScale);
 
-      const paddingX = viewport.width * 0.05; 
-      const paddingY = viewport.height * 0.05; 
-      
-      const endX = -(viewport.width / 2) + paddingX + (2.0); 
-      const endY = (viewport.height / 2) - paddingY - (1.0);
-
-      const currentX = THREE.MathUtils.lerp(0, endX, scrollProgress);
-      const currentY = THREE.MathUtils.lerp(0, endY, scrollProgress);
+      // Position the center of the logo
+      const currentX = THREE.MathUtils.lerp(0, posAtZZero.x, scrollProgress);
+      const currentY = THREE.MathUtils.lerp(0, posAtZZero.y, scrollProgress);
 
       group.current.position.set(currentX, currentY, 0);
 
-      // 3. Parallax effect - Slight tilt based on mouse position
+      // 3. Parallax effect - Very subtle 3D tilt
       // We fade this out as they scroll down so it locks cleanly into the navbar
       const parallaxFactor = 1.0 - scrollProgress;
-      group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, (state.pointer.x * 0.25) * parallaxFactor, 0.1);
-      group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, (state.pointer.y * -0.25) * parallaxFactor, 0.1);
+      group.current.rotation.y = THREE.MathUtils.lerp(group.current.rotation.y, (state.pointer.x * 0.1) * parallaxFactor, 0.05);
+      group.current.rotation.x = THREE.MathUtils.lerp(group.current.rotation.x, (state.pointer.y * -0.1) * parallaxFactor, 0.05);
+      
+      // Also add subtle positional parallax
+      group.current.position.x += (state.pointer.x * 0.02) * parallaxFactor;
+      group.current.position.y += (state.pointer.y * 0.02) * parallaxFactor;
     }
   });
 
@@ -247,7 +308,7 @@ export default function Scene() {
 
       {/* Main Logo Container */}
       <group ref={group}>
-        <LiquidLogo globalMouseUv={globalMouseUv} />
+        <LiquidLogo />
       </group>
     </>
   );
