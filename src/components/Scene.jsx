@@ -259,7 +259,7 @@ function NeuralNetwork({ globalMousePos }) {
 
 function LiquidLogo() {
   const materialRef = useRef();
-  const texture = useTexture('/assets/logo.png');
+  const texture = useTexture(`${import.meta.env.BASE_URL}assets/logo.png`);
   const [hovered, setHovered] = useState(false);
   const targetHover = useRef(0);
 
