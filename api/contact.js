@@ -50,6 +50,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ success: true, message: 'Your message has been sent successfully!' });
   } catch (error) {
     console.error('Error sending email:', error);
-    return res.status(500).json({ success: false, error: 'Failed to send message.' });
+    // TEMPORARY: Return the exact error message to the frontend so we can see it without Vercel Logs
+    return res.status(500).json({ success: false, error: 'Failed to send message.', details: error.message || error.toString() });
   }
 }
