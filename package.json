@@ -1,8 +1,8 @@
 {
-  "name": "landing-page",
+  "name": "difyuno",
   "version": "1.0.0",
   "main": "index.js",
-  "homepage": "https://akshay-sreekumar-kizhakkedath.github.io/difyusion-landing-page/",
+  "homepage": "https://akshay-sreekumar-kizhakkedath.github.io/difyuno/",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev:frontend": "vite",
