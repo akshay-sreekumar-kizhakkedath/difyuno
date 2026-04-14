@@ -147,6 +147,10 @@ export default function Overlay() {
     
     try {
       const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '');
+      // Create AbortController for timeout (60 seconds to handle Render cold starts)
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+      
       const response = await fetch(`${API_URL}/api/contact`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -154,8 +158,11 @@ export default function Overlay() {
           name: formData.name,
           email: formData.email,
           message: `Phone: ${formData.phone}\n\n${formData.message}`
-        })
+        }),
+        signal: controller.signal
       });
+      
+      clearTimeout(timeoutId);
       
       const result = await response.json();
       if (result.success) {
@@ -168,6 +175,10 @@ export default function Overlay() {
       }
     } catch (error) {
       console.error('Error submitting form:', error);
+      // Handle different error types
+      if (error.name === 'AbortError') {
+        alert('The server is waking up from sleep (this can take up to 50 seconds on the first request). Please wait and try again in a moment.');
+      }
       setFormStatus('error');
       setTimeout(() => setFormStatus('idle'), 5000);
     }
