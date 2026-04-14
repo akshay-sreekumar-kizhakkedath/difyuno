@@ -321,9 +321,9 @@ export default function Overlay() {
           </div>
           <h1 className="text-[12vw] md:text-[8vw] font-bold leading-[0.9] tracking-normal uppercase mb-6 drop-shadow-2xl text-white">
             We Build <br/>
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
-              Outcomes
-            </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+                Intelligence
+              </span>
           </h1>
           <p className="text-base md:text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
             The next generation of business won't be built on templates. <br className="hidden md:block" />
@@ -332,7 +332,7 @@ export default function Overlay() {
           
           <div className="mt-8 inline-flex items-center gap-3 px-5 py-2.5 rounded-full border border-white/10 backdrop-blur-sm transition-all duration-300 cursor-pointer hover:bg-primary/20 hover:border-primary/50 hover:-translate-y-1 hover:scale-105 active:scale-95 active:translate-y-0 group">
             <span className="w-2 h-2 rounded-full bg-primary animate-pulse shadow-[0_0_10px_#ffb86c] group-hover:bg-white group-hover:shadow-[0_0_10px_#fff] transition-colors"></span>
-            <span className="text-xs uppercase tracking-wider text-white/80 group-hover:text-white transition-colors">Available for new projects</span>
+            <span className="text-xs uppercase tracking-wider text-white/80 group-hover:text-white transition-colors">Available for new projects to“Define your vision with us”</span>
           </div>
         </div>
       </section>
