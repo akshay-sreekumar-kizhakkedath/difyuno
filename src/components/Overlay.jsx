@@ -306,14 +306,14 @@ export default function Overlay() {
 
       {/* Screen 1: Pure 3D Logo Stage */}
       {/* Removed pointer-events-auto from the massive section wrapper so the 3D canvas underneath can receive mouse movements! */}
-      <section className="h-screen flex flex-col justify-end items-center pb-12">
+      <section className="h-[60vh] flex flex-col justify-end items-center pb-12">
         <div className="scroll-indicator text-white/30 text-xs uppercase tracking-[0.3em] animate-pulse pointer-events-none">
           Scroll to discover
         </div>
       </section>
 
       {/* Screen 2: Hero Content */}
-      <section className="min-h-screen flex flex-col justify-center items-center text-center px-4 pt-20 pointer-events-none">
+      <section className="min-h-[85vh] flex flex-col justify-center items-center text-center px-4 pt-12 pointer-events-none">
         {/* Only the content block gets pointer-events-auto */}
         <div className="pointer-events-auto stagger-fade-up relative z-10">
           <div className="mb-4 text-primary tracking-[0.3em] text-xs md:text-sm uppercase font-semibold">
@@ -337,10 +337,10 @@ export default function Overlay() {
         </div>
       </section>
 
-      <div className="h-[20vh]"></div>
+      <div className="h-[10vh]"></div>
 
       {/* Services Intro Section */}
-      <section id="services" className="min-h-screen flex items-center px-8 md:px-24">
+      <section id="services" className="min-h-[85vh] flex items-center px-8 md:px-24">
         <div className="max-w-3xl pointer-events-auto">
           <div className="stagger-fade-up">
             <div className="mb-6 text-accent tracking-[0.3em] text-xs uppercase font-semibold">
@@ -373,10 +373,10 @@ export default function Overlay() {
         </div>
       </section>
 
-      <div className="h-[20vh]"></div>
+      <div className="h-[10vh]"></div>
 
       {/* Immersive 3D Text Parallax Section */}
-      <section className="min-h-screen flex items-center justify-end px-8 md:px-24 text-right">
+      <section className="min-h-[85vh] flex items-center justify-end px-8 md:px-24 text-right">
         <div className="max-w-2xl pointer-events-auto">
           <div className="stagger-fade-up">
             <div className="mb-6 text-primary tracking-[0.3em] text-xs uppercase font-semibold">

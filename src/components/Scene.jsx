@@ -354,7 +354,9 @@ export default function Scene() {
     const vh = window.innerHeight || 1000;
     
     if (group.current) {
-      const scrollProgress = THREE.MathUtils.clamp(scrollY / vh, 0, 1);
+      // Speed up the transition: complete within 400px or 40% of viewport height
+      const transitionThreshold = Math.min(vh * 0.4, 400);
+      const scrollProgress = THREE.MathUtils.clamp(scrollY / transitionThreshold, 0, 1);
       
       // Dynamic start scale to ensure logo fits 85% of the smallest screen dimension
       const baseSize = 8.0; 
