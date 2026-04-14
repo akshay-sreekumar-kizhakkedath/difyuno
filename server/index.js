@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import nodemailer from 'nodemailer';
+import sgMail from '@sendgrid/mail';
 
 // Load environment variables
 dotenv.config();
@@ -13,25 +13,8 @@ const PORT = process.env.PORT || 3001;
 app.use(cors());
 app.use(express.json());
 
-// Nodemailer transporter setup
-const transporter = nodemailer.createTransport({
-  host: 'smtp.gmail.com',
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-  // Force IPv4 and disable IPv6 to avoid connectivity issues
-  tls: {
-    servername: 'smtp.gmail.com',
-    rejectUnauthorized: false
-  },
-  // Connection options
-  connectionTimeout: 60000,
-  greetingTimeout: 30000,
-  socketTimeout: 60000
-});
+// SendGrid setup
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
 // Verification endpoint to check server status
 app.get('/api/health', (req, res) => {
@@ -48,10 +31,10 @@ app.post('/api/contact', async (req, res) => {
   }
 
   try {
-    // Configure email options
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to: process.env.RECEIVER_EMAIL || process.env.EMAIL_USER, // Send to yourself or a specific receiver
+    // Configure email options for SendGrid
+    const msg = {
+      to: process.env.RECEIVER_EMAIL || process.env.EMAIL_USER,
+      from: process.env.SENDER_EMAIL || 'noreply@difyuno.com', // Use verified sender
       subject: `New Contact Form Submission from ${name}`,
       text: `
         Name: ${name}
@@ -68,8 +51,8 @@ app.post('/api/contact', async (req, res) => {
       `
     };
 
-    // Send the email
-    await transporter.sendMail(mailOptions);
+    // Send the email using SendGrid
+    await sgMail.send(msg);
     
     // Respond to frontend
     res.status(200).json({ success: true, message: 'Your message has been sent successfully!' });
