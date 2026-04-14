@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import emailjs from '@emailjs/browser';
 
 const customStyles = `
   .awwwards-btn {
@@ -141,44 +142,35 @@ export default function Overlay() {
   const [formData, setFormData] = useState({ name: '', email: '', phone: '', message: '' });
   const [formStatus, setFormStatus] = useState('idle'); // idle, submitting, success, error
 
+  // Initialize EmailJS
+  useEffect(() => {
+    emailjs.init(import.meta.env.VITE_EMAILJS_PUBLIC_KEY);
+  }, []);
+
   const handleFormSubmit = async (e) => {
     e.preventDefault();
     setFormStatus('submitting');
     
     try {
-      const API_URL = import.meta.env.VITE_API_URL || (import.meta.env.DEV ? 'http://localhost:3001' : '');
-      // Create AbortController for timeout (60 seconds to handle Render cold starts)
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
-      
-      const response = await fetch(`${API_URL}/api/contact`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: formData.name,
-          email: formData.email,
-          message: `Phone: ${formData.phone}\n\n${formData.message}`
-        }),
-        signal: controller.signal
-      });
-      
-      clearTimeout(timeoutId);
-      
-      const result = await response.json();
-      if (result.success) {
-        setFormStatus('success');
-        setFormData({ name: '', email: '', phone: '', message: '' });
-        setTimeout(() => setFormStatus('idle'), 5000);
-      } else {
-        setFormStatus('error');
-        setTimeout(() => setFormStatus('idle'), 5000);
-      }
+      const templateParams = {
+        from_name: formData.name,
+        from_email: formData.email,
+        phone: formData.phone,
+        message: formData.message,
+        to_email: 'difyuno@gmail.com'
+      };
+
+      await emailjs.send(
+        import.meta.env.VITE_EMAILJS_SERVICE_ID,
+        import.meta.env.VITE_EMAILJS_TEMPLATE_ID,
+        templateParams
+      );
+
+      setFormStatus('success');
+      setFormData({ name: '', email: '', phone: '', message: '' });
+      setTimeout(() => setFormStatus('idle'), 5000);
     } catch (error) {
-      console.error('Error submitting form:', error);
-      // Handle different error types
-      if (error.name === 'AbortError') {
-        alert('The server is waking up from sleep (this can take up to 50 seconds on the first request). Please wait and try again in a moment.');
-      }
+      console.error('Error sending email:', error);
       setFormStatus('error');
       setTimeout(() => setFormStatus('idle'), 5000);
     }
