@@ -347,7 +347,7 @@ export default function Overlay() {
               02 — What We Do
             </div>
               <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-normal leading-tight text-white hover:text-primary transition-colors duration-500">
-                Built for how your business actually works
+                Built for how things actually run
               </h2>
               <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
                 We design and develop websites and custom software that simplify operations, manage data, and give you full control—without unnecessary complexity.
