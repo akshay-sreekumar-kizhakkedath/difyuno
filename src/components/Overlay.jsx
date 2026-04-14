@@ -353,7 +353,7 @@ export default function Overlay() {
                 We design and develop websites and custom software that simplify operations, manage data, and give you full control—without unnecessary complexity.
               </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16 cards-container">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-16 cards-container">
             <div className="glass-card p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
               <h3 className="text-2xl font-semibold mb-3 text-white">Business Websites</h3>
               <p className="text-white/50 text-sm leading-relaxed">Fast, modern websites built to represent your brand and convert visitors into customers.</p>
