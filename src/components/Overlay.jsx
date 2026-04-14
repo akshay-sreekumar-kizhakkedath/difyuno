@@ -346,22 +346,29 @@ export default function Overlay() {
             <div className="mb-6 text-accent tracking-[0.3em] text-xs uppercase font-semibold">
               02 — What We Do
             </div>
-            <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-normal leading-tight text-white hover:text-primary transition-colors duration-500">
-              Intelligence <br/>at Scale.
-            </h2>
-            <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
-              Turn your "what if" into a functional AI reality in 14 days. We leverage cutting-edge WebGL, React Three Fiber, and high-performance engineering to build award-winning experiences.
-            </p>
+              <h2 className="text-5xl md:text-7xl font-bold mb-8 tracking-normal leading-tight text-white hover:text-primary transition-colors duration-500">
+                Built for how your business actually works
+              </h2>
+              <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
+                We design and develop websites and custom software that simplify operations, manage data, and give you full control—without unnecessary complexity.
+              </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-16 cards-container">
             <div className="glass-card p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
-              <h3 className="text-2xl font-semibold mb-3 text-white">AI-Powered MVP</h3>
-              <p className="text-white/50 text-sm leading-relaxed">Stop waiting months. We use Vibe Coding to ship full-stack AI-integrated MVPs in 14 days.</p>
+              <h3 className="text-2xl font-semibold mb-3 text-white">Business Websites</h3>
+              <p className="text-white/50 text-sm leading-relaxed">Fast, modern websites built to represent your brand and convert visitors into customers.</p>
             </div>
             <div className="glass-card p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
-              <h3 className="text-2xl font-semibold mb-3 text-white">Workflow Agents</h3>
-              <p className="text-white/50 text-sm leading-relaxed">Digital employees that handle leads, manage CRM, and automate repetitive tasks automatically.</p>
+              <h3 className="text-2xl font-semibold mb-3 text-white">Custom Web Applications</h3>
+              <p className="text-white/50 text-sm leading-relaxed">From billing systems to booking platforms, we build tools tailored to your workflow.</p>
             </div>
+            <div className="glass-card p-8 rounded-2xl bg-white/5 border border-white/10 backdrop-blur-md hover:-translate-y-2 hover:border-primary/50 transition-all duration-300">
+              <h3 className="text-2xl font-semibold mb-3 text-white">Admin & Control Panels</h3>
+              <p className="text-white/50 text-sm leading-relaxed">Manage everything from one place—customers, data, and operations with full control.</p>
+            </div>
+          </div>
+          <div className="mt-10 text-center text-white/60">
+            <p>Simple systems. Real control. Built to scale with you.</p>
           </div>
         </div>
       </section>
