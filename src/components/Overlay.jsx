@@ -305,8 +305,8 @@ export default function Overlay() {
       </nav>
 
       {/* Screen 1: Pure 3D Logo Stage */}
-      {/* Removed pointer-events-auto from the massive section wrapper so the 3D canvas underneath can receive mouse movements! */}
-      <section className="h-[60vh] flex flex-col justify-end items-center pb-12">
+      {/* Reverted to h-screen to ensure this section is seen individually without the next section peaking in. */}
+      <section className="h-screen flex flex-col justify-end items-center pb-12">
         <div className="scroll-indicator text-white/30 text-xs uppercase tracking-[0.3em] animate-pulse pointer-events-none">
           Scroll to discover
         </div>
