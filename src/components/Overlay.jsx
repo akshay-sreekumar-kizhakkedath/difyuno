@@ -383,16 +383,16 @@ export default function Overlay() {
               03 — The Philosophy
             </div>
             <h2 className="text-5xl md:text-7xl font-bold mb-6 tracking-normal text-white hover:text-accent transition-colors duration-500">
-              Immersive <br/>Experiences.
+              Built with purpose. <br/>Not complexity.
             </h2>
             <p className="text-xl md:text-2xl text-white/60 leading-relaxed mb-10 font-light">
-              Break out of the 2D grid. Interactive storytelling creates memory and drives conversion. Minimum clicks. Maximum impact.
+              We focus on building systems that are simple to use, reliable in performance, and tailored to real business needs—so you spend less time managing tools and more time growing your business.
             </p>
           </div>
           
           <div className="gsap-parallax mt-12 w-fit ml-auto">
             <button className="awwwards-btn z-[1] px-10 py-5 border border-white/20 text-white font-bold uppercase tracking-widest text-sm rounded-full backdrop-blur-md cursor-pointer">
-              View Our Work
+              Explore our work
             </button>
           </div>
         </div>
