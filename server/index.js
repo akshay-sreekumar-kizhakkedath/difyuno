@@ -14,13 +14,23 @@ app.use(cors());
 app.use(express.json());
 
 // Nodemailer transporter setup
-// This relies on environment variables for credentials
 const transporter = nodemailer.createTransport({
-  service: process.env.EMAIL_SERVICE || 'gmail',
+  host: 'smtp.gmail.com',
+  port: 465,
+  secure: true,
   auth: {
     user: process.env.EMAIL_USER,
     pass: process.env.EMAIL_PASS,
   },
+  // Force IPv4 and disable IPv6 to avoid connectivity issues
+  tls: {
+    servername: 'smtp.gmail.com',
+    rejectUnauthorized: false
+  },
+  // Connection options
+  connectionTimeout: 60000,
+  greetingTimeout: 30000,
+  socketTimeout: 60000
 });
 
 // Verification endpoint to check server status
