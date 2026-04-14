@@ -320,7 +320,10 @@ export default function Overlay() {
             01 — Who We Are
           </div>
           <h1 className="text-[12vw] md:text-[8vw] font-bold leading-[0.9] tracking-normal uppercase mb-6 drop-shadow-2xl text-white">
-            Define your vision with us
+            Define your <br/>
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">
+              vision with us
+            </span>
           </h1>
           <p className="text-base md:text-xl text-white/70 max-w-2xl mx-auto font-light leading-relaxed">
             The next generation of business won't be built on templates. <br className="hidden md:block" />
