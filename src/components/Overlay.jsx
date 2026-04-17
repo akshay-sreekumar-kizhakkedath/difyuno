@@ -136,6 +136,85 @@ function CustomCursor() {
   );
 }
 
+// Mobile Experience Suggestion Component
+function MobileNotice() {
+  const [isVisible, setIsVisible] = useState(false);
+  const noticeRef = useRef();
+
+  useEffect(() => {
+    // Detect mobile/tablet or small screen
+    const isMobile = window.innerWidth < 1024 || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobile) {
+      setIsVisible(true);
+      // Wait a bit after load to show the notice
+      const timeout = setTimeout(() => {
+        if (noticeRef.current) {
+          gsap.fromTo(noticeRef.current, 
+            { y: 50, opacity: 0 },
+            { y: 0, opacity: 1, duration: 1.2, ease: "power4.out" }
+          );
+        }
+      }, 3000);
+      return () => clearTimeout(timeout);
+    }
+  }, []);
+
+  if (!isVisible) return null;
+
+  const handleDismiss = () => {
+    gsap.to(noticeRef.current, { 
+      y: 50, 
+      opacity: 0, 
+      duration: 0.6, 
+      ease: "power2.in",
+      onComplete: () => setIsVisible(false) 
+    });
+  };
+
+  return (
+    <div 
+      ref={noticeRef}
+      className="fixed bottom-6 left-6 right-6 z-[100] lg:hidden pointer-events-auto opacity-0"
+    >
+      <div className="glass-card bg-black/80 border border-primary/20 backdrop-blur-2xl p-5 rounded-2xl flex flex-col gap-3 shadow-[0_20px_50px_rgba(0,0,0,0.8)] relative overflow-hidden group">
+        {/* Decorative corner glow */}
+        <div className="absolute -top-10 -right-10 w-20 h-20 bg-primary/10 rounded-full blur-2xl pointer-events-none"></div>
+        
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <div className="relative">
+              <div className="w-2 h-2 rounded-full bg-primary animate-pulse"></div>
+              <div className="absolute inset-0 w-2 h-2 rounded-full bg-primary animate-ping opacity-40"></div>
+            </div>
+            <span className="text-[10px] uppercase tracking-[0.25em] text-primary font-bold">Optimization Suggestion</span>
+          </div>
+          <button 
+            onClick={handleDismiss}
+            className="p-1 -mr-1 text-white/40 hover:text-white hover:bg-white/10 rounded-full transition-all duration-300"
+            aria-label="Dismiss"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+          </button>
+        </div>
+        
+        <p className="text-white/90 text-[13px] font-light leading-relaxed pr-2">
+          For the <span className="text-primary font-medium italic">immense user experience</span> and to fully appreciate the 3D visual journey, we suggest viewing this on a desktop.
+        </p>
+        
+        <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+        
+        <button 
+          onClick={handleDismiss}
+          className="text-[10px] uppercase tracking-widest text-white/50 hover:text-primary self-start transition-colors duration-300"
+        >
+          Continue Anyway →
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export default function Overlay() {
   const overlayRef = useRef();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -279,6 +358,7 @@ export default function Overlay() {
     <div ref={overlayRef} className="relative z-10 w-full pointer-events-none">
       <style>{customStyles}</style>
       <CustomCursor />
+      <MobileNotice />
 
       {/* Navigation */}
       <nav className={`nav-container fixed top-0 left-0 w-full p-4 md:p-6 md:px-12 flex justify-between items-center pointer-events-none z-50 transition-all duration-500 ${
