@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { Canvas } from '@react-three/fiber';
 import Lenis from 'lenis';
+import { Analytics } from '@vercel/analytics/react';
 import Scene from './components/Scene';
 import Overlay from './components/Overlay';
 
@@ -25,6 +26,7 @@ export default function App() {
 
   return (
     <div ref={containerRef} className="relative w-full">
+      <Analytics />
       {/* HTML Foreground Overlay (Nav and content) */}
       <Overlay />
 
